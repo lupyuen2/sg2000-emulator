@@ -1,6 +1,6 @@
 # TinyEMU
 
-[![Build](https://github.com/fernandotcl/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
+[![Build](https://github.com/lupyuen/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
 
 This is a modified version of [Fabrice Bellard's TinyEMU][TinyEMU].
 
