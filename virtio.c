@@ -32,7 +32,7 @@
 #include "list.h"
 #include "virtio.h"
 
-//#define DEBUG_VIRTIO
+#define DEBUG_VIRTIO ////
 
 /* MMIO addresses - from the Linux kernel */
 #define VIRTIO_MMIO_MAGIC_VALUE		0x000
@@ -1269,6 +1269,7 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
                                        int desc_idx, int read_size,
                                        int write_size)
 {
+    //puts("virtio_console_recv_request");////
     VIRTIOConsoleDevice *s1 = (VIRTIOConsoleDevice *)s;
     CharacterDevice *cs = s1->cs;
     uint8_t *buf;
@@ -1289,6 +1290,7 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
+    if (!qs->ready) { printf("virtio_console_can_write_data: ready=%d\n", qs->ready); }////
     if (!qs->ready)
         return FALSE;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
@@ -1297,6 +1299,7 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
 
 int virtio_console_get_write_len(VIRTIODevice *s)
 {
+    puts("virtio_console_get_write_len");////
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
     int desc_idx;
@@ -1322,9 +1325,11 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     int desc_idx;
     uint16_t avail_idx;
 
+    printf("virtio_console_write_data: ready=%d\n", qs->ready);////
     if (!qs->ready)
         return 0;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
+    printf("virtio_console_write_data: last_avail_idx=%d, avail_idx=%d\n", qs->last_avail_idx, avail_idx);////
     if (qs->last_avail_idx == avail_idx)
         return 0;
     desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
@@ -1338,6 +1343,7 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
 /* send a resize event */
 void virtio_console_resize_event(VIRTIODevice *s, int width, int height)
 {
+    puts("virtio_console_resize_event");////
     /* indicate the console size */
     put_le16(s->config_space + 0, width);
     put_le16(s->config_space + 2, height);
@@ -1347,6 +1353,7 @@ void virtio_console_resize_event(VIRTIODevice *s, int width, int height)
 
 VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs)
 {
+    puts("virtio_console_init");////
     VIRTIOConsoleDevice *s;
 
     s = mallocz(sizeof(*s));

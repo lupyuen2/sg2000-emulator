@@ -1042,6 +1042,7 @@ static void set_priv(RISCVCPUState *s, int priv)
 static void raise_exception2(RISCVCPUState *s, uint32_t cause,
                              target_ulong tval)
 {
+    printf("raise_exception2: cause=%d, tval=%p\n", cause, (void *)tval);////
     BOOL deleg;
     target_ulong causel;
     
@@ -1121,6 +1122,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
+    printf("raise_exception: cause=%d\n", cause);////
     raise_exception2(s, cause, 0);
 }
 
@@ -1185,6 +1187,7 @@ static inline uint32_t get_pending_irq_mask(RISCVCPUState *s)
 
 static __exception int raise_interrupt(RISCVCPUState *s)
 {
+    //puts("raise_interrupt");////
     uint32_t mask;
     int irq_num;
 
