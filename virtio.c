@@ -1269,7 +1269,7 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
                                        int desc_idx, int read_size,
                                        int write_size)
 {
-    //puts("virtio_console_recv_request");////
+    puts("virtio_console_recv_request");////
     VIRTIOConsoleDevice *s1 = (VIRTIOConsoleDevice *)s;
     CharacterDevice *cs = s1->cs;
     uint8_t *buf;
@@ -1337,6 +1337,7 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, buf_len);
     virtio_consume_desc(s, queue_idx, desc_idx, buf_len);
     qs->last_avail_idx++;
+    printf("virtio_console_write_data: buf[0]=%c, buf_len=%d\n", buf[0], buf_len);////
     return buf_len;
 }
 
