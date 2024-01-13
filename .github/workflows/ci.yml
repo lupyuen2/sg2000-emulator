@@ -4,20 +4,23 @@ on: [push, pull_request]
 
 jobs:
 
+  ## Build `temu` for Ubuntu
   build_linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: sudo apt-get install libcurl4-openssl-dev libssl-dev zlib1g-dev libsdl2-dev
+      - run: sudo apt install libcurl4-openssl-dev libssl-dev zlib1g-dev libsdl2-dev
       - run: make
 
+  ## Build `js/riscvemu*` for WebAssembly
   build_js:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
-      - run: docker exec emscripten make -f Makefile.js
+      - run: sudo apt install emscripten
+      - run: make -f Makefile.js
 
+  ## Build `temu` for macOS
   # build_mac:
   #     runs-on: macos-10.15
   #     env:
@@ -27,6 +30,7 @@ jobs:
   #       - run: brew install openssl sdl2
   #       - run: make CFLAGS=-I$(brew --prefix)/opt/openssl/include LDFLAGS=-L$(brew --prefix)/opt/openssl/lib CONFIG_MACOS=y
 
+  ## Build for iOS
   # build_ios:
   #     runs-on: macos-10.15
   #     env:
