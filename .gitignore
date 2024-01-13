@@ -8,3 +8,11 @@ splitimg
 
 # macOS-specific
 .DS_Store
+
+# WebAssembly Outputs
+js/riscvemu32-wasm.js
+js/riscvemu32-wasm.wasm
+js/riscvemu32.js
+js/riscvemu64-wasm.js
+js/riscvemu64-wasm.wasm
+js/riscvemu64.js
