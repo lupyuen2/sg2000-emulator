@@ -40,13 +40,13 @@
 #error CONFIG_RISCV_MAX_XLEN must be defined
 #endif
 
-//#define DUMP_INVALID_MEM_ACCESS
-//#define DUMP_MMU_EXCEPTIONS
-//#define DUMP_INTERRUPTS
-//#define DUMP_INVALID_CSR
-//#define DUMP_EXCEPTIONS
-//#define DUMP_CSR
-//#define CONFIG_LOGFILE
+#define DUMP_INVALID_MEM_ACCESS
+#define DUMP_MMU_EXCEPTIONS
+#define DUMP_INTERRUPTS
+#define DUMP_INVALID_CSR
+#define DUMP_EXCEPTIONS
+#define DUMP_CSR
+#define CONFIG_LOGFILE
 
 #include "riscv_cpu_priv.h"
 
