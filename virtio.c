@@ -1290,7 +1290,7 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
-    if (!qs->ready) { printf("virtio_console_can_write_data: ready=%d\n", qs->ready); }////
+    //if (!qs->ready) { printf("virtio_console_can_write_data: ready=%d\n", qs->ready); }////
     if (!qs->ready)
         return FALSE;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
