@@ -64,15 +64,15 @@ typedef struct RISCVMachine {
     int virtio_count;
 } RISCVMachine;
 
-#define LOW_RAM_SIZE   0x00010000 /* 64KB */
-#define RAM_BASE_ADDR  0x80000000
-#define CLINT_BASE_ADDR 0x02000000
-#define CLINT_SIZE      0x000c0000
+#define LOW_RAM_SIZE   0x00010000  // TODO: 64KB at 0x0
+#define RAM_BASE_ADDR  0x50200000
+#define CLINT_BASE_ADDR 0x02000000  // TODO: Unused
+#define CLINT_SIZE      0x000c0000  // TODO: Unused
 #define DEFAULT_HTIF_BASE_ADDR 0x40008000
 #define VIRTIO_BASE_ADDR 0x40010000
 #define VIRTIO_SIZE      0x1000
 #define VIRTIO_IRQ       1
-#define PLIC_BASE_ADDR 0x40100000
+#define PLIC_BASE_ADDR 0xe0000000ul
 #define PLIC_SIZE      0x00400000
 #define FRAMEBUFFER_BASE_ADDR 0x41000000
 
@@ -253,7 +253,7 @@ static void plic_update_mip(RISCVMachine *s)
     }
 }
 
-#define PLIC_HART_BASE 0x200000
+#define PLIC_HART_BASE 0x201000  // Hart 0 S-Mode Priority Threshold
 #define PLIC_HART_SIZE 0x1000
 
 static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
@@ -860,10 +860,10 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
                     RAM_BASE_ADDR + initrd_base,
                     initrd_size);
 
-    /* jump_addr = 0x80000000 */
+    /* jump_addr = RAM_BASE_ADDR */
     
     q = (uint32_t *)(ram_ptr + 0x1000);
-    q[0] = 0x297 + 0x80000000 - 0x1000; /* auipc t0, jump_addr */
+    q[0] = 0x297 + RAM_BASE_ADDR - 0x1000; /* auipc t0, jump_addr */
     q[1] = 0x597; /* auipc a1, dtb */
     q[2] = 0x58593 + ((fdt_addr - 4) << 20); /* addi a1, a1, dtb */
     q[3] = 0xf1402573; /* csrr a0, mhartid */
