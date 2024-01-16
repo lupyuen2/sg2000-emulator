@@ -45,9 +45,9 @@
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
 #define DUMP_EXCEPTIONS
-#define DUMP_CSR
+//#define DUMP_CSR
 #define CONFIG_LOGFILE
-
+ 
 #include "riscv_cpu_priv.h"
 
 #if FLEN > 0
@@ -374,12 +374,20 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
         }
         pr = get_phys_mem_range(s->mem_map, paddr);
         if (!pr) {
+            //// Begin Test: Intercept Memory-Mapped I/O
+            switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX read from 0x4000000030002084?
+            case 0x30002084:     // uart_fifo_config_1: Is UART Ready?
+                ret = 32; break; // UART TX is always ready, default TX FIFO Available is 32
+
+            default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
-            printf("target_read_slow: invalid physical address 0x");
-            print_target_ulong(paddr);
-            printf("\n");
+                printf("target_read_slow: invalid physical address 0x");
+                print_target_ulong(paddr);
+                printf("\n");
 #endif
-            return 0;
+                return 0;
+            }
+            //// End Test
         } else if (pr->is_ram) {
             tlb_idx = (addr >> PG_SHIFT) & (TLB_SIZE - 1);
             ptr = pr->phys_mem + (uintptr_t)(paddr - pr->addr);
@@ -461,11 +469,19 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
         }
         pr = get_phys_mem_range(s->mem_map, paddr);
         if (!pr) {
+            //// Begin Test: Intercept Memory-Mapped I/O
+            switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX write to 0x4000000030002088?
+            case 0x30002088:  // uart_fifo_wdata: UART Output
+                putchar(val); break;  // Print the character
+
+            default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
-            printf("target_write_slow: invalid physical address 0x");
-            print_target_ulong(paddr);
-            printf("\n");
-#endif
+                printf("target_write_slow: invalid physical address 0x");
+                print_target_ulong(paddr);
+                printf("\n");
+#endif                
+            }
+            //// End Test
         } else if (pr->is_ram) {
             phys_mem_set_dirty_bit(pr, paddr - pr->addr);
             tlb_idx = (addr >> PG_SHIFT) & (TLB_SIZE - 1);
