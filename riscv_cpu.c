@@ -1134,6 +1134,9 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         set_priv(s, PRV_M);
         s->pc = s->mtvec;
     }
+    //// Begin Test: Quit if cause=2, otherwise it will loop forever
+    if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
+    //// End Test
 }
 
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
