@@ -956,6 +956,11 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
     
     /* virtio console */
     if (p->console) {
+        //// Begin Test: Save the Console
+        const char *msg = "TinyEMU Emulator for Ox64 BL808 RISC-V SBC\r\n";
+        void print_console(RISCVMachine *machine0, const char *buf, int len);
+        print_console(s, msg, strlen(msg));
+        //// End Test
         vbus->irq = &s->plic_irq[irq_num];
         s->common.console_dev = virtio_console_init(vbus, p->console);
         vbus->addr += VIRTIO_SIZE;
@@ -1119,3 +1124,15 @@ const VirtMachineClass riscv_machine_class = {
     riscv_vm_send_mouse_event,
     riscv_vm_send_key_event,
 };
+
+//// Begin Test: Print to Console
+void print_console(RISCVMachine *machine0, const char *buf, int len) {
+    static RISCVMachine *machine = NULL;
+    if (machine0 != NULL) { machine = machine0; }
+    if (machine == NULL) { puts("print_console: machine is null"); return; }
+    machine->common.console->write_data(
+        machine->common.console->opaque,
+        (const uint8_t *)buf, 
+        len);
+}
+//// End Test

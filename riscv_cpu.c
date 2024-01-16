@@ -33,6 +33,8 @@
 #include "iomem.h"
 #include "riscv_cpu.h"
 
+void print_console(void *machine0, const char *buf, int len);
+
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
 #endif
@@ -471,9 +473,13 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
             switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX write to 0x4000000030002088?
-            case 0x30002088:  // uart_fifo_wdata: UART Output
-                putchar(val); break;  // Print the character
-
+            case 0x30002088: { // uart_fifo_wdata: UART Output
+                // Print the character
+                char buf[1];
+                buf[0] = val;
+                print_console(NULL, buf, 1);
+                break;
+            }
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_write_slow: invalid physical address 0x");
