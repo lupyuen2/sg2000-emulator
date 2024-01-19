@@ -12,6 +12,10 @@ See https://github.com/lupyuen/nuttx-tinyemu
 
 # TODO
 
+[MRET to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393)
+
+[Dump MCAUSE 2: Illegal Instruction](https://github.com/lupyuen/ox64-tinyemu/commit/37c2d1169706a56afbd2d7d2a13624b58269e1ef#diff-2080434ac7de762b1948a6bc493874b21b9e3df3de8b9e52de23bfdcec354abd)
+
 ```text
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
 virtio_console_init

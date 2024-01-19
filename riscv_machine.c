@@ -871,9 +871,23 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     //// Previously: Jump to RAM_BASE_ADDR in Machine Mode
     // q[4] = 0x00028067; /* jalr zero, t0, jump_addr */
 
-    //// Jump to RAM_BASE_ADDR in Supervisor Mode
-    q[4] = 0x34129073;  // csrw mepc, t0
-    q[5] = 0x30200073;  // mret
+    //// Begin Test: Start in Supervisor Mode
+    uint32_t pc = 4;
+    // Set mstatus to S-mode and enable SUM
+    // CLEAR_CSR(mstatus, ~MSTATUS_MPP_MASK);
+    q[pc++] = 0x77f9;      // lui a5, 0xffffe
+    q[pc++] = 0x7ff7879b;  // addiw a5, a5, 2047
+    q[pc++] = 0x3007b073;  // csrc mstatus, a5
+
+    // SET_CSR(mstatus, MSTATUS_MPPS | SSTATUS_SUM);
+    q[pc++] = 0x000417b7;  // lui a5, 0x41
+    q[pc++] = 0x8007879b;  // addiw a5, a5, -2048
+    q[pc++] = 0x3007a073;  // csrs mstatus, a5
+
+    // Jump to RAM_BASE_ADDR in Supervisor Mode
+    q[pc++] = 0x34129073;  // csrw mepc, t0
+    q[pc++] = 0x30200073;  // mret
+    //// End Test
 }
 
 static void riscv_flush_tlb_write_range(void *opaque, uint8_t *ram_addr,
