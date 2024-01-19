@@ -1089,7 +1089,8 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         flag = (cause & CAUSE_INTERRUPT) == 0;
         //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
         if (cause == CAUSE_SUPERVISOR_ECALL) ////
-            flag = 0;
+            //// Previously: flag = 0;
+            flag = 1; ////
 #endif
         if (flag) {
             log_printf("raise_exception: cause=0x%08x tval=0x", cause);
