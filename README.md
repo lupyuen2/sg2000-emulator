@@ -10,7 +10,7 @@
 
 See https://github.com/lupyuen/nuttx-tinyemu
 
-# TODO
+# Start NuttX Kernel in Supervisor Mode
 
 [MRET to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393)
 
