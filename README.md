@@ -101,7 +101,20 @@ priv=M mstatus=0000000a000400a1 cycles=79648467
 tinyemu: Unknown mcause 2, quitting
 ```
 
-TODO: ECALL from User Mode to Machine Mode! Why not Supervisor Mode?
+ECALL from User Mode to Machine Mode! Not Supervisor Mode!
+
+[Set exception and interrupt delegation for S-mode](https://github.com/lupyuen/ox64-tinyemu/commit/9536e86217bcccbe15272dc4450eac9fab173b03)
+
+```text
+work_start_lowpri: Starting low-priority kernel worker thread(s)
+nx_start_application: Starting init task: /system/bin/init
+up_exit: TCB=0x504098d0 exiting
+NuttShell (NSH) NuttX-12.4.0
+nsh>
+nx_start: CPU0: Beginning Idle Loop
+```
+
+NuttX Shell starts OK yay!
 
 # TinyEMU
 
