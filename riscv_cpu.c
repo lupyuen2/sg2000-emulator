@@ -1087,7 +1087,8 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 #ifdef DUMP_EXCEPTIONS
         flag = 1;
         flag = (cause & CAUSE_INTERRUPT) == 0;
-        if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
+        //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
+        if (cause == CAUSE_SUPERVISOR_ECALL) ////
             flag = 0;
 #endif
         if (flag) {
