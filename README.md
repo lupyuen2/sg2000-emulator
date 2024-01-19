@@ -116,6 +116,8 @@ nx_start: CPU0: Beginning Idle Loop
 
 NuttX Shell starts OK yay!
 
+Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+
 # TinyEMU
 
 [![Build](https://github.com/lupyuen/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
