@@ -6,15 +6,13 @@
 
 (Instead of Machine Mode)
 
-[NuttX Start Code for 64-bit RISC-V Kernel Mode (rv-virt:knsh64)](https://gist.github.com/lupyuen/368744ef01b7feba10c022cd4f4c5ef2)
-
 See https://github.com/lupyuen/nuttx-tinyemu
 
 # Start NuttX Kernel in Supervisor Mode
 
-[MRET to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393)
+Based on [NuttX Start Code for 64-bit RISC-V Kernel Mode (rv-virt:knsh64)](https://gist.github.com/lupyuen/368744ef01b7feba10c022cd4f4c5ef2)...
 
-[Dump MCAUSE 2: Illegal Instruction](https://github.com/lupyuen/ox64-tinyemu/commit/37c2d1169706a56afbd2d7d2a13624b58269e1ef#diff-2080434ac7de762b1948a6bc493874b21b9e3df3de8b9e52de23bfdcec354abd)
+We [MRET to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393) and [dump MCAUSE 2: Illegal Instruction](https://github.com/lupyuen/ox64-tinyemu/commit/37c2d1169706a56afbd2d7d2a13624b58269e1ef#diff-2080434ac7de762b1948a6bc493874b21b9e3df3de8b9e52de23bfdcec354abd)...
 
 ```text
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
@@ -35,19 +33,19 @@ raise_exception2: cause=2, tval=0x0
 pc =0000000000000000 ra =0000000000000000 sp =0000000050407c00 gp = 
 ```
 
-Source:
+Which comes from...
 
 ```text
-/Users/Luppy/ox64/nuttx/arch/risc-v/src/chip/bl808_head.S:124
+nuttx/arch/risc-v/src/chip/bl808_head.S:124
 2:
   /* Disable all interrupts (i.e. timer, external) in sie */
   csrw	sie, zero
     50200074:	10401073          	csrw	sie,zero
 ```
 
-`csrw sie,zero` is invalid because we are in User Mode, not Supervisor Mode (`priv=U`)
+`csrw sie,zero` is invalid because we're in User Mode (`priv=U`), not Supervisor Mode.
 
-[Set mstatus to S-mode and enable SUM](https://github.com/lupyuen/ox64-tinyemu/commit/d379d92bfe544681e0560306a1aad96f5792da9e)
+So we [set mstatus to S-mode and enable SUM](https://github.com/lupyuen/ox64-tinyemu/commit/d379d92bfe544681e0560306a1aad96f5792da9e)...
 
 ```text
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
@@ -66,9 +64,9 @@ priv=M mstatus=0000000a00000000 cycles=4
 tinyemu: Unknown mcause 2, quitting
 ```
 
-Illegal instruction caused by unpadded 16-bit instruction.
+We hit an Illegal Instruction caused by an unpadded 16-bit instruction.
 
-[Insert NOP to pad 16-bit RISC-V Instructions to 32-bit](https://github.com/lupyuen/ox64-tinyemu/commit/23a36478cf03561d40f357f876284c09722ce455)
+So we [insert NOP to pad 16-bit RISC-V Instructions to 32-bit](https://github.com/lupyuen/ox64-tinyemu/commit/23a36478cf03561d40f357f876284c09722ce455)...
 
 ```text
 work_start_lowpri: Starting low-priority kernel worker thread(s)
@@ -101,9 +99,9 @@ priv=M mstatus=0000000a000400a1 cycles=79648467
 tinyemu: Unknown mcause 2, quitting
 ```
 
-ECALL from User Mode to Machine Mode! Not Supervisor Mode!
+But the ECALL goes from User Mode (`priv=U`) to Machine Mode (`priv=M`), not Supervisor Mode!
 
-[Set exception and interrupt delegation for S-mode](https://github.com/lupyuen/ox64-tinyemu/commit/9536e86217bcccbe15272dc4450eac9fab173b03)
+We [set exception and interrupt delegation for S-mode](https://github.com/lupyuen/ox64-tinyemu/commit/9536e86217bcccbe15272dc4450eac9fab173b03)...
 
 ```text
 work_start_lowpri: Starting low-priority kernel worker thread(s)
@@ -114,9 +112,11 @@ nsh>
 nx_start: CPU0: Beginning Idle Loop
 ```
 
-NuttX Shell starts OK yay!
+Finally NuttX Shell starts OK yay!
 
 Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+
+Up Next: Emulate UART Interrupts for Console Input
 
 # TinyEMU
 
