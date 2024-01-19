@@ -2,7 +2,9 @@
 
 [_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/ox64)
 
-# Emulate Ox64 BL808 SBC in the Web Browser with TinyEMU RISC-V Emulator
+# Emulate Ox64 BL808 SBC in the Web Browser with TinyEMU RISC-V Emulator <br><br> WIP: Start NuttX Kernel in Supervisor Mode
+
+(Instead of Machine Mode)
 
 See https://github.com/lupyuen/nuttx-tinyemu
 
