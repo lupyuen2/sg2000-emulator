@@ -6,6 +6,8 @@
 
 (Instead of Machine Mode)
 
+[NuttX Start Code for 64-bit RISC-V Kernel Mode (rv-virt:knsh64)](https://gist.github.com/lupyuen/368744ef01b7feba10c022cd4f4c5ef2)
+
 See https://github.com/lupyuen/nuttx-tinyemu
 
 # TinyEMU
