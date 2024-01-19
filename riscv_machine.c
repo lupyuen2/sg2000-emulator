@@ -873,6 +873,16 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
 
     //// Begin Test: Start in Supervisor Mode
     uint32_t pc = 4;
+
+    // Set exception and interrupt delegation for S-mode
+    // WRITE_CSR(medeleg, 0xffff);
+    q[pc++] = 0x000167c1;  // lui a5, 0x10 ; nop
+    q[pc++] = 0x000137fd;  // addiw a5, a5, -1 ; nop
+    q[pc++] = 0x30279073;  // csrw medeleg, a5
+
+    // WRITE_CSR(mideleg, 0xffff);
+    q[pc++] = 0x30379073;  // csrw mideleg, a5
+
     // Set mstatus to S-mode and enable SUM
     // CLEAR_CSR(mstatus, ~MSTATUS_MPP_MASK);
     q[pc++] = 0x000177f9;  // lui a5, 0xffffe ; nop
