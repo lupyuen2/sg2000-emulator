@@ -875,7 +875,7 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     uint32_t pc = 4;
     // Set mstatus to S-mode and enable SUM
     // CLEAR_CSR(mstatus, ~MSTATUS_MPP_MASK);
-    q[pc++] = 0x77f9;      // lui a5, 0xffffe
+    q[pc++] = 0x000177f9;  // lui a5, 0xffffe ; nop
     q[pc++] = 0x7ff7879b;  // addiw a5, a5, 2047
     q[pc++] = 0x3007b073;  // csrc mstatus, a5
 
@@ -887,6 +887,9 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     // Jump to RAM_BASE_ADDR in Supervisor Mode
     q[pc++] = 0x34129073;  // csrw mepc, t0
     q[pc++] = 0x30200073;  // mret
+
+    // Sentinel to catch overrun
+    q[pc++] = 0x12345678;
     //// End Test
 }
 

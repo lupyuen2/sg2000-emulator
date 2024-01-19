@@ -47,7 +47,7 @@ void print_console(void *machine0, const char *buf, int len);
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
 #define DUMP_EXCEPTIONS
-#define DUMP_CSR
+// #define DUMP_CSR
 #define CONFIG_LOGFILE
  
 #include "riscv_cpu_priv.h"
