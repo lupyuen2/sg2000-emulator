@@ -47,7 +47,7 @@ void print_console(void *machine0, const char *buf, int len);
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
 #define DUMP_EXCEPTIONS
-//#define DUMP_CSR
+#define DUMP_CSR
 #define CONFIG_LOGFILE
  
 #include "riscv_cpu_priv.h"
@@ -1141,7 +1141,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         s->pc = s->mtvec;
     }
     //// Begin Test: Quit if cause=2, otherwise it will loop forever
-    if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
+    // if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
     //// End Test
 }
 

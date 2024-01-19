@@ -867,7 +867,13 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     q[1] = 0x597; /* auipc a1, dtb */
     q[2] = 0x58593 + ((fdt_addr - 4) << 20); /* addi a1, a1, dtb */
     q[3] = 0xf1402573; /* csrr a0, mhartid */
-    q[4] = 0x00028067; /* jalr zero, t0, jump_addr */
+
+    //// Previously: Jump to RAM_BASE_ADDR in Machine Mode
+    // q[4] = 0x00028067; /* jalr zero, t0, jump_addr */
+
+    //// Jump to RAM_BASE_ADDR in Supervisor Mode
+    q[4] = 0x34129073;  // csrw mepc, t0
+    q[5] = 0x30200073;  // mret
 }
 
 static void riscv_flush_tlb_write_range(void *opaque, uint8_t *ram_addr,
