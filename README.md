@@ -101,6 +101,8 @@ priv=M mstatus=0000000a000400a1 cycles=79648467
 tinyemu: Unknown mcause 2, quitting
 ```
 
+TODO: ECALL from User Mode to Machine Mode! Why not Supervisor Mode?
+
 # TinyEMU
 
 [![Build](https://github.com/lupyuen/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
