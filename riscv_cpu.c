@@ -374,10 +374,14 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
             s->pending_exception = CAUSE_LOAD_PAGE_FAULT;
             return -1;
         }
+
+        //// Ignore the Upper Bits due to T-Head MMU Flags
+        paddr &= 0xfffffffffffful; ////
+
         pr = get_phys_mem_range(s->mem_map, paddr);
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
-            switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX read from 0x4000000030002084?
+            switch(paddr) {
             case 0x30002084:     // uart_fifo_config_1: Is UART Ready?
                 ret = 32; break; // UART TX is always ready, default TX FIFO Available is 32
 
@@ -469,10 +473,14 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
             s->pending_exception = CAUSE_STORE_PAGE_FAULT;
             return -1;
         }
+
+        //// Ignore the Upper Bits due to T-Head MMU Flags
+        paddr &= 0xfffffffffffful; ////
+
         pr = get_phys_mem_range(s->mem_map, paddr);
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
-            switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX write to 0x4000000030002088?
+            switch(paddr) {
             case 0x30002088: { // uart_fifo_wdata: UART Output
                 // Print the character
                 char buf[1];
