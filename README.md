@@ -1,6 +1,8 @@
 ![Ox64 BL808 Emulator with TinyEMU RISC-V Emulator and Apache NuttX RTOS](https://lupyuen.github.io/images/tinyemu2-title.png)
 
-[_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/ox64)
+[_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/smode)
+
+[_(Watch the Demo on YouTube)_](https://youtu.be/FAxaMt6A59I)
 
 # Emulate Ox64 BL808 SBC in the Web Browser with TinyEMU RISC-V Emulator <br><br> Part 2: Start NuttX Kernel in Supervisor Mode
 
@@ -115,7 +117,9 @@ We [set the Exception and Interrupt delegation for Supervisor Mode](https://gith
 
 Finally NuttX Shell starts OK yay! User Mode ECALLs are working perfectly!
 
-Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+[_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/smode)
+
+[_(Watch the Demo on YouTube)_](https://youtu.be/FAxaMt6A59I)
 
 ```text
 work_start_lowpri: Starting low-priority kernel worker thread(s)
@@ -243,7 +247,9 @@ We pass the keypress from VirtIO Console to the Emulated UART Input Register...
 
 Console Input works OK yay!
 
-Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+[_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/smode)
+
+[_(Watch the Demo on YouTube)_](https://youtu.be/FAxaMt6A59I)
 
 ```text
 Loading...
@@ -290,7 +296,9 @@ Strangely TinyEMU crashes with an Illegal Instruction Exception at RDTTIME (Read
 
 The [Latest NuttX Build](https://github.com/lupyuen/nuttx-ox64/releases/tag/nuttx-ox64-2024-01-20) includes an OpenSBI ECALL. And it works OK with TinyEMU yay!
 
-Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+[_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/smode)
+
+[_(Watch the Demo on YouTube)_](https://youtu.be/FAxaMt6A59I)
 
 ```text
 Loading...
