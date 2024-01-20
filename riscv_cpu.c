@@ -1130,7 +1130,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         flag = 1;
         flag = (cause & CAUSE_INTERRUPT) == 0;
         //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
-        if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_USER_ECALL) ////
+        if (cause == CAUSE_USER_ECALL) ////
             flag = 0;
 #endif
         if (flag) {
@@ -1145,6 +1145,16 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         }
     }
 #endif
+
+    //// Begin Test: Emulate OpenSBI for System Timer
+    if (cause == CAUSE_SUPERVISOR_ECALL) {
+        puts("TODO: Emulate OpenSBI for System Timer");
+        printf("Before pc=%p\n", s->pc); ////
+        s->pc += 4;  // Jump to the next instruction (ret)
+        printf("After pc=%p\n", s->pc); ////
+        return; 
+    }
+    //// End Test
 
     if (s->priv <= PRV_S) {
         /* delegate the exception to the supervisor priviledge */
