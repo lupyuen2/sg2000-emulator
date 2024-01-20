@@ -158,6 +158,7 @@ static void virtio_mmio_write(void *opaque, uint32_t offset,
 static uint32_t virtio_pci_read(void *opaque, uint32_t offset, int size_log2);
 static void virtio_pci_write(void *opaque, uint32_t offset,
                              uint32_t val, int size_log2);
+void virtio_ack_irq(VIRTIODevice *device0);
 
 static void virtio_reset(VIRTIODevice *s)
 {
@@ -293,6 +294,7 @@ static void virtio_init(VIRTIODevice *s, VIRTIOBusDef *bus,
     s->config_space_size = config_space_size;
     s->device_recv = device_recv;
     virtio_reset(s);
+    virtio_ack_irq(s); ////
 }
 
 static uint16_t virtio_read16(VIRTIODevice *s, virtio_phys_addr_t addr)
@@ -1337,8 +1339,6 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     s->int_status |= 1;
     set_irq(s->irq, 1);
 
-    // TODO: Clear the interrupt after reading keypress
-    // set_irq(s->irq, 0);
 #ifdef NOTUSED
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
@@ -2678,3 +2678,16 @@ VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
     return (VIRTIODevice *)s;
 }
 
+//// Begin Test: Acknowledge VirtIO Interrupt
+void virtio_ack_irq(VIRTIODevice *device0) {
+    static VIRTIODevice *device = NULL;
+    if (device0 != NULL) { device = device0; return; }
+    if (device == NULL) { puts("virtio_ack_irq: Missing device"); }
+
+    puts("virtio_ack_irq");
+    // device->int_status &= ~val;
+    // if (device->int_status == 0) {
+        set_irq(device->irq, 0);
+    // }
+}
+//// End Test

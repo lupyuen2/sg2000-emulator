@@ -496,11 +496,12 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
                 print_console(NULL, buf, 1);
                 break;
             }
-
             // Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
-            // case 0x30002028:
-            //     break;
-
+            case 0x30002028: {
+                void virtio_ack_irq(void *device0);
+                virtio_ack_irq(NULL);
+                break;
+            }
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_write_slow: invalid physical address 0x");
@@ -1171,7 +1172,7 @@ static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
     printf("raise_exception: cause=%d\n", cause);////
     #ifndef EMSCRIPTEN ////
-    printf("raise_exception: sleep\n"); sleep(4);////
+    // printf("raise_exception: sleep\n"); sleep(4);////
     #endif  //// EMSCRIPTEN
     raise_exception2(s, cause, 0);
 }
