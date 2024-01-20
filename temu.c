@@ -560,8 +560,7 @@ void virt_machine_run(VirtMachine *m)
     FD_ZERO(&efds);
     fd_max = -1;
 #ifndef _WIN32
-    //// Previously: if (m->console_dev && virtio_console_can_write_data(m->console_dev)) {
-    if (m->console_dev) { //// virtio_console_can_write_data is false until VM Guest connects to VirtIO
+    if (m->console_dev && virtio_console_can_write_data(m->console_dev)) {
         STDIODevice *s = m->console->opaque;
         stdin_fd = s->stdin_fd;
         FD_SET(stdin_fd, &rfds);
