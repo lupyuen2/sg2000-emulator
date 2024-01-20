@@ -142,6 +142,8 @@ We modify the VirtIO Console Driver in TinyEMU so that it behaves like BL808 UAR
 
 - [To handle a keypress, we trigger the UART3 Interrupt](https://github.com/lupyuen/ox64-tinyemu/commit/3deaef2a5d5ca3ad8a4339c21be3b054fba4fda2)
 
+When we press a key, we see the UART Interrupt fired in NuttX!
+
 ```text
 nx_start: CPU0: Beginning Idle Loop
 [a]
@@ -155,7 +157,7 @@ raise_exception2: cause=-2147483639, tval=0x0
 plic_read: offset=0x201004
 plic_update_mip: reset_mip, pending=0x80000, served=0x80000
 
-## Handle Interrupt
+## Handle Interrupt in Interrupt Handler
 target_read_slow: invalid physical address 0x0000000030002020
 target_read_slow: invalid physical address 0x0000000030002024
 
@@ -174,7 +176,7 @@ target_read_slow: invalid physical address 0x0000000030002024
 plic_write: offset=0x201004, val=0x14
 ```
 
-TinyEMU loops forever handling UART Interrupts. Because of our NuttX UART Driver: [bl808_serial.c](https://github.com/lupyuen2/wip-pinephone-nuttx/blob/tinyemu4/arch/risc-v/src/bl808/bl808_serial.c#L166-L224)
+But TinyEMU loops forever handling UART Interrupts. We check our NuttX UART Driver: [bl808_serial.c](https://github.com/lupyuen2/wip-pinephone-nuttx/blob/tinyemu4/arch/risc-v/src/bl808/bl808_serial.c#L166-L224)
 
 ```c
 // NuttX Interrupt Handler for BL808 UART
@@ -199,11 +201,13 @@ static int __uart_interrupt(int irq, void *context, void *arg) {
 
 To make the NuttX Interrupt Handler work...
 
-- UART Interrupt Status: [BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
+- Fix the UART Interrupt Status: [BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
 
-- UART Interrupt Mask: [BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
+- Fix the UART Interrupt Mask: [BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
 
 - To prevent looping: [Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)](https://github.com/lupyuen/ox64-tinyemu/commit/f9c1841d7699ecc04f9ce4499f1c081ae50aa225)
+
+Now it doesn't loop!
 
 ```text
 nx_start: CPU0: Beginning Idle Loop
@@ -217,7 +221,7 @@ raise_exception2: cause=-2147483639, tval=0x0
 plic_read: offset=0x201004
 plic_update_mip: reset_mip, pending=0x80000, served=0x80000
 
-## Handle Interrupt
+## Handle Interrupt in Interrupt Handler
 virtio_ack_irq
 plic_set_irq: irq_num=20, state=0
 plic_update_mip: reset_mip, pending=0x0, served=0x80000
@@ -276,13 +280,14 @@ Strangely TinyEMU crashes with an Illegal Instruction Exception at RDTTIME (Read
 
 - [Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.](https://github.com/lupyuen/ox64-tinyemu/commit/5cb2fb4e263b9e965777f567b053a0914f3cf368)
 
-The Latest NuttX Build includes an OpenSBI ECALL. And it works OK yay!
+The [Latest NuttX Build](https://github.com/lupyuen/nuttx-ox64/releases/tag/nuttx-ox64-2024-01-20) includes an OpenSBI ECALL. And it works OK with TinyEMU yay!
 
 Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
 
 ```text
 Loading...
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
+Patched RDTTIME (Read System Timer) at 0x5020bad6
 ABC
 NuttShell (NSH) NuttX-12.4.0-RC0
 nsh> uname -a
