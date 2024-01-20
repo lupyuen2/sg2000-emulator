@@ -1157,6 +1157,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
     printf("raise_exception: cause=%d\n", cause);////
+    printf("raise_exception: sleep\n"); sleep(1);////
     raise_exception2(s, cause, 0);
 }
 
