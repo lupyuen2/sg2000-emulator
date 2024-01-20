@@ -71,7 +71,7 @@ typedef struct RISCVMachine {
 #define DEFAULT_HTIF_BASE_ADDR 0x40008000
 #define VIRTIO_BASE_ADDR 0x40010000
 #define VIRTIO_SIZE      0x1000
-#define VIRTIO_IRQ       1
+#define VIRTIO_IRQ       20  // UART3 IRQ
 #define PLIC_BASE_ADDR 0xe0000000ul
 #define PLIC_SIZE      0x00400000
 #define FRAMEBUFFER_BASE_ADDR 0x41000000

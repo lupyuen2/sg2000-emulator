@@ -122,6 +122,10 @@ Up Next: Emulate UART Interrupts for Console Input
 
 TODO
 
+[Disable Console Resize event because it crashes VM Guest at startup](https://github.com/lupyuen/ox64-tinyemu/commit/dc869fe6a9a726d413e8a83c56cf40f271c6fe3c)
+
+[We always allow write data](https://github.com/lupyuen/ox64-tinyemu/commit/93cd86a7311986e5063cb0c8e368f89cdae73e27)
+
 # Emulate OpenSBI for System Timer
 
 TODO
