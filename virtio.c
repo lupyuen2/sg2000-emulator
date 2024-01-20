@@ -1349,7 +1349,8 @@ void virtio_console_resize_event(VIRTIODevice *s, int width, int height)
     put_le16(s->config_space + 0, width);
     put_le16(s->config_space + 2, height);
 
-    virtio_config_change_notify(s);
+    //// Disable Console Resize event because it crashes VM Guest at startup
+    //// Previously: virtio_config_change_notify(s);
 }
 
 VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs)
