@@ -132,6 +132,37 @@ TODO
 
 [Handle a keypress](https://github.com/lupyuen/ox64-tinyemu/commit/a3d029e6e08d1ee3147f41536df76dc3986cb23e)
 
+[To handle a keypress, we trigger the UART3 Interrupt](https://github.com/lupyuen/ox64-tinyemu/commit/3deaef2a5d5ca3ad8a4339c21be3b054fba4fda2)
+
+```text
+nx_start: CPU0: Beginning Idle Loop
+[a]
+plic_set_irq: irq_num=20, state=1
+plic_update_mip: set_mip, pending=0x80000, served=0x0
+raise_exception: cause=-2147483639
+raise_exception: sleep
+raise_exception2: cause=-2147483639, tval=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000, served=0x80000
+target_read_slow: invalid physical address 0x0000000030002020
+target_read_slow: invalid physical address 0x0000000030002024
+plic_write: offset=0x201004, val=0x14
+plic_update_mip: set_mip, pending=0x80000, served=0x0
+raise_exception: cause=-2147483639
+raise_exception: sleep
+raise_exception2: cause=-2147483639, tval=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000, served=0x80000
+target_read_slow: invalid physical address 0x0000000030002020
+target_read_slow: invalid physical address 0x0000000030002024
+plic_write: offset=0x201004, val=0x14
+plic_update_mip: set_mip, pending=0x80000, served=0x0
+raise_exception: cause=-2147483639
+raise_exception: sleep
+```
+
+[TODO: Clear the interrupt after reading keypress](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117)
+
 # Emulate OpenSBI for System Timer
 
 TODO
