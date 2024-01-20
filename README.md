@@ -49,7 +49,7 @@ nuttx/arch/risc-v/src/chip/bl808_head.S:124
 
 _Why is this instruction invalid?_
 
-`csrw sie,zero` is invalid because we're in User Mode (`priv=U`), not Supervisor Mode.
+`csrw sie,zero` is invalid because we're in User Mode (`priv=U`), not Supervisor Mode. And SIE is a Supervisor-Mode CSR Register.
 
 So we [set MSTATUS to Supervisor Mode and enable SUM](https://github.com/lupyuen/ox64-tinyemu/commit/d379d92bfe544681e0560306a1aad96f5792da9e).
 
@@ -109,6 +109,10 @@ But the ECALL goes from User Mode (`priv=U`) to Machine Mode (`priv=M`), not Sup
 
 We [set the Exception and Interrupt delegation for Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/9536e86217bcccbe15272dc4450eac9fab173b03).
 
+Finally NuttX Shell starts OK yay! User Mode ECALLs are working perfectly!
+
+Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+
 ```text
 work_start_lowpri: Starting low-priority kernel worker thread(s)
 nx_start_application: Starting init task: /system/bin/init
@@ -118,9 +122,7 @@ nsh>
 nx_start: CPU0: Beginning Idle Loop
 ```
 
-Finally NuttX Shell starts OK yay!
-
-Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+[(See the Complete Log)](https://gist.github.com/lupyuen/de071bf54b603f4aaff3954648dcc340)
 
 # Emulate UART Interrupts for Console Input
 
@@ -260,6 +262,8 @@ nxposix_spawn_exec: ERROR: exec failed: 2
 NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
 ```
 
+[(See the Complete Log)](https://gist.github.com/lupyuen/de071bf54b603f4aaff3954648dcc340)
+
 # Emulate OpenSBI for System Timer
 
 _How to emulate the OpenSBI ECALL to start the System Timer?_
@@ -297,6 +301,8 @@ help usage:  help [-v] [<cmd>]
     cd          exec        mkdir       rmdir       umount
 nsh>
 ```
+
+[(See the Complete Log)](https://gist.github.com/lupyuen/de071bf54b603f4aaff3954648dcc340)
 
 # Emulate BL808 GPIO to Blink an LED
 
