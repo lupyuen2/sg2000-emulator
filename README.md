@@ -410,7 +410,32 @@ target_write_slow: invalid physical address 0x0000000030002024
 
 Console Input works OK yay!
 
-TODO
+```text
+Loading...
+TinyEMU Emulator for Ox64 BL808 RISC-V SBC
+ABCnx_start: Entry
+uart_register: Registering /dev/console
+work_start_lowpri: Starting low-priority kernel worker thread(s)
+nx_start_application: Starting init task: /system/bin/init
+up_exit: TCB=0x504098d0 exiting
+ 
+NuttShell (NSH) NuttX-12.4.0
+nsh> nx_start: CPU0: Beginning Idle Loop
+ 
+nsh> ls
+posix_spawn: pid=0x80202978 path=ls file_actions=0x80202980 attr=0x80202988 argv
+=0x80202a28
+nxposix_spawn_exec: ERROR: exec failed: 2
+/:
+ dev/
+ proc/
+ system/
+nsh> uname -a
+posix_spawn: pid=0x80202978 path=uname file_actions=0x80202980 attr=0x80202988 a
+rgv=0x80202a28
+nxposix_spawn_exec: ERROR: exec failed: 2
+NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
+```
 
 # Emulate OpenSBI for System Timer
 
