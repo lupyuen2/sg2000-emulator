@@ -1328,6 +1328,12 @@ int virtio_console_get_write_len(VIRTIODevice *s)
 
 int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
 {
+    //// To handle a keypress, we trigger the UART3 Interrupt.
+    //// TODO: Pass the keypress to VM Guest
+    printf("[%c]\n", buf[0]); ////
+    // s->int_status |= 1;
+    // set_irq(s->irq, 1);
+#ifdef NOTUSED
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
     int desc_idx;
@@ -1347,6 +1353,7 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     qs->last_avail_idx++;
     printf("virtio_console_write_data: buf[0]=%c, buf_len=%d\n", buf[0], buf_len);////
     return buf_len;
+#endif  // NOTUSED
 }
 
 /* send a resize event */
