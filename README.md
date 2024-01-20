@@ -410,6 +410,8 @@ target_write_slow: invalid physical address 0x0000000030002024
 
 Console Input works OK yay!
 
+Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
+
 ```text
 Loading...
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
@@ -444,6 +446,8 @@ NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
 [Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.](https://github.com/lupyuen/ox64-tinyemu/commit/5cb2fb4e263b9e965777f567b053a0914f3cf368)
 
 Latest NuttX Build works OK yay!
+
+Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
 
 ```text
 Loading...
