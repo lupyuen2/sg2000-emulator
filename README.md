@@ -192,7 +192,31 @@ static int __uart_interrupt(int irq, void *context, void *arg) {
 
 [BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
 
-TODO: To prevent looping: Need to [Clear the interrupt](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117) after setting BL808_UART_INT_CLEAR (0x30002028)
+To prevent looping: [Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)](https://github.com/lupyuen/ox64-tinyemu/commit/f9c1841d7699ecc04f9ce4499f1c081ae50aa225)
+
+```text
+nx_start: CPU0: Beginning Idle Loop
+[a]
+plic_set_irq: irq_num=20, state=1
+plic_update_mip: set_mip, pending=0x80000, served=0x0
+raise_exception: cause=-2147483639
+raise_exception2: cause=-2147483639, tval=0x0
+
+## Claim Interrupt
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000, served=0x80000
+
+## Handle Interrupt
+virtio_ack_irq
+plic_set_irq: irq_num=20, state=0
+plic_update_mip: reset_mip, pending=0x0, served=0x80000
+
+## Complete Interrupt
+plic_write: offset=0x201004, val=0x14
+plic_update_mip: reset_mip, pending=0x0, served=0x0
+```
+
+TODO: Why NuttX won't read UART Input?
 
 # Emulate OpenSBI for System Timer
 
