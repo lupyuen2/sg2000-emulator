@@ -385,6 +385,14 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
             case 0x30002084:     // uart_fifo_config_1: Is UART Ready?
                 ret = 32; break; // UART TX is always ready, default TX FIFO Available is 32
 
+            // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
+            case 0x30002020:
+                ret = (1 << 1); break;
+
+            // Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
+            case 0x30002024:
+                ret = 0; break;
+
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_read_slow: invalid physical address 0x");
@@ -488,6 +496,11 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
                 print_console(NULL, buf, 1);
                 break;
             }
+
+            // Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
+            // case 0x30002028:
+            //     break;
+
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_write_slow: invalid physical address 0x");
@@ -1158,7 +1171,7 @@ static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
     printf("raise_exception: cause=%d\n", cause);////
     #ifndef EMSCRIPTEN ////
-    printf("raise_exception: sleep\n"); sleep(1);////
+    printf("raise_exception: sleep\n"); sleep(4);////
     #endif  //// EMSCRIPTEN
     raise_exception2(s, cause, 0);
 }
