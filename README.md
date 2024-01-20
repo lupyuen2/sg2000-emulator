@@ -10,6 +10,8 @@ Continues from [Part 1](https://github.com/lupyuen/nuttx-tinyemu)...
 
 # Start NuttX Kernel in Supervisor Mode
 
+![NuttX Kernel won't work in Machine Mode](https://lupyuen.github.io/images/tinyemu2-flow2.jpg)
+
 _NuttX needs to boot in Supervisor Mode, not Machine Mode. How to fix this in TinyEMU?_
 
 We copy to TinyEMU Boot Code the Machine-Mode Start Code from [NuttX Start Code for 64-bit RISC-V Kernel Mode (rv-virt:knsh64)](https://gist.github.com/lupyuen/368744ef01b7feba10c022cd4f4c5ef2)...
@@ -17,6 +19,8 @@ We copy to TinyEMU Boot Code the Machine-Mode Start Code from [NuttX Start Code 
 - [Execute the MRET Instruction to jump from Machine Mode to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393)
 
 - [Dump the RISC-V Registers MCAUSE 2: Illegal Instruction](https://github.com/lupyuen/ox64-tinyemu/commit/37c2d1169706a56afbd2d7d2a13624b58269e1ef#diff-2080434ac7de762b1948a6bc493874b21b9e3df3de8b9e52de23bfdcec354abd) (for easier troubleshooting)
+
+![TinyEMU will boot NuttX in Supervisor Mode](https://lupyuen.github.io/images/tinyemu2-flow3.jpg)
 
 ```text
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
@@ -126,7 +130,9 @@ nx_start: CPU0: Beginning Idle Loop
 
 # Emulate UART Interrupts for Console Input
 
-_How will we emulate UART Interrupts to support Console Input?_
+![UART Interrupts for Ox64 BL808 SBC](https://lupyuen.github.io/images/plic2-registers.jpg)
+
+_How will we emulate [UART Interrupts](https://lupyuen.github.io/articles/plic2) to support Console Input?_
 
 We modify the VirtIO Console Driver in TinyEMU so that it behaves like BL808 UART. And we switch the VirtIO IRQ so that it pretends to be BL808 UART3...
 
@@ -269,6 +275,8 @@ NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
 [(See the Complete Log)](https://gist.github.com/lupyuen/de071bf54b603f4aaff3954648dcc340)
 
 # Emulate OpenSBI for System Timer
+
+![TinyEMU will boot NuttX in Supervisor Mode](https://lupyuen.github.io/images/tinyemu2-flow3.jpg)
 
 _How to emulate the OpenSBI ECALL to start the System Timer?_
 
