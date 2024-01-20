@@ -382,10 +382,15 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
             switch(paddr) {
-            case 0x30002084:     // uart_fifo_config_1: Is UART Ready?
-                ret = 32         // UART TX is always ready, default TX FIFO Available is 32
-                    | (1 << 8);  // UART RX FIFO Available is always 1
+            case 0x30002084: { // uart_fifo_config_1: Is UART Ready?
+                char read_input(void);
+                uint8_t rx_avail = (read_input() == 0)  // Check input buffer
+                    ? 0   // No input available
+                    : 1;  // One char available
+                ret = 32  // UART TX is always ready, default TX FIFO Available is 32
+                    | (rx_avail << 8);  // UART RX FIFO Available depends on input buffer
                 break;
+            }
 
             // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
             case 0x30002020:
@@ -397,6 +402,16 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
                 puts("read BL808_UART_INT_MASK");
                 ret = 0; break;
 
+            // Console Input: BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char
+            case 0x3000208c: {
+                char read_input(void);
+                ret = read_input();
+
+                // Clear the Input Buffer
+                void set_input(char ch);
+                set_input(0);
+                break;
+            }
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_read_slow: invalid physical address 0x");

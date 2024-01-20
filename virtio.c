@@ -158,7 +158,9 @@ static void virtio_mmio_write(void *opaque, uint32_t offset,
 static uint32_t virtio_pci_read(void *opaque, uint32_t offset, int size_log2);
 static void virtio_pci_write(void *opaque, uint32_t offset,
                              uint32_t val, int size_log2);
+
 void virtio_ack_irq(VIRTIODevice *device0);
+void set_input(char ch);
 
 static void virtio_reset(VIRTIODevice *s)
 {
@@ -1334,8 +1336,9 @@ int virtio_console_get_write_len(VIRTIODevice *s)
 int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
 {
     //// To handle a keypress, we trigger the UART3 Interrupt.
-    //// TODO: Pass the keypress to VM Guest
+    //// Pass the keypress to VM Guest
     printf("[%c]\n", buf[0]); ////
+    set_input(buf[0]);
     s->int_status |= 1;
     set_irq(s->irq, 1);
 
@@ -2689,5 +2692,16 @@ void virtio_ack_irq(VIRTIODevice *device0) {
     // if (device->int_status == 0) {
         set_irq(device->irq, 0);
     // }
+}
+
+//// Remember and return the Input Char
+static char input_char = 0;
+
+void set_input(char ch) {
+    input_char = ch;    
+}
+
+char read_input(void) {
+    return input_char;
 }
 //// End Test
