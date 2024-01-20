@@ -883,7 +883,7 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     // WRITE_CSR(mideleg, 0xffff);
     q[pc++] = 0x30379073;  // csrw mideleg, a5
 
-    // TODO:
+    // TODO: Follow the OpenSBI Settings for Ox64
     // Boot HART MIDELEG         : 0x0000000000000222
     // Boot HART MEDELEG         : 0x000000000000b109
 
@@ -907,6 +907,21 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
 
     // Machine Mode ECALL: Always return
     // *(uint32_t *)(ram_ptr + 0x0) = 0x30200073;  // mret
+
+    // Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.
+    uint8_t *kernel_ptr = get_ram_ptr(s, RAM_BASE_ADDR, TRUE);
+    for (int i = 0; i < 0x10000; i++) {
+        // Patch RDTTIME to NOP
+        // c0102573 rdtime a0
+        const uint8_t search[]  = { 0x73, 0x25, 0x10, 0xc0 };
+        // 00010001 nop ; nop
+        const uint8_t replace[] = { 0x01, 0x00, 0x01, 0x00 };
+
+        if (memcmp(&kernel_ptr[i], search,  sizeof(search)) == 0) {
+            memcpy(&kernel_ptr[i], replace, sizeof(replace));
+            printf("Patched RDTTIME (Read System Timer) at %p\n", RAM_BASE_ADDR + i);
+        }
+    }
     //// End Test
 }
 
