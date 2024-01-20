@@ -1174,7 +1174,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     // if (cause == CAUSE_SUPERVISOR_ECALL) { deleg = 0; }////
 
     if (deleg) {
-        puts("raise_exception2: smode");////
+        puts("raise_exception2: smode"); dump_regs(s);////
         s->scause = causel;
         s->sepc = s->pc;
         s->stval = tval;
@@ -1197,12 +1197,12 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         set_priv(s, PRV_M);
         s->pc = s->mtvec;
 
-        puts("raise_exception2: mmode");////
+        puts("raise_exception2: mmode"); dump_regs(s);////
         // s->mepc += 4;////
         // sleep(4);////
     }
     //// Begin Test: Quit if cause=2, otherwise it will loop forever
-    if (cause == 2 && tval == 0xc0102573) { s->pc += 4; return; }  // Ignore `rdtime a0`
+    if (cause == 2 && tval == 0xc0102573ul) { s->pc += 4; return; }  // Ignore `rdtime a0`
     if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
     //// End Test
 }
