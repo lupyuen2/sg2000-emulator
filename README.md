@@ -439,9 +439,33 @@ NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
 
 # Emulate OpenSBI for System Timer
 
-TODO
+[Emulate OpenSBI for System Timer](https://github.com/lupyuen/ox64-tinyemu/commit/ab58cd2dc6a1d94b9bd13faa0f402a7ada4b270d)
 
-[Emulate OpenSBI for System Timer](https://github.com/lupyuen/ox64-tinyemu/commit/2a40b3eb9dbac9e5fffb9e57d6af47ac9a15e5cd)
+[Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.](https://github.com/lupyuen/ox64-tinyemu/commit/5cb2fb4e263b9e965777f567b053a0914f3cf368)
+
+Latest NuttX Build works OK yay!
+
+```text
+Loading...
+TinyEMU Emulator for Ox64 BL808 RISC-V SBC
+ABC
+NuttShell (NSH) NuttX-12.4.0-RC0
+nsh> uname -a
+NuttX 12.4.0-RC0 4c41d84d21 Jan 20 2024 00:10:33 risc-v ox64
+nsh> help
+help usage:  help [-v] [<cmd>]
+ 
+    .           cp          exit        mkrd        set         unset
+    [           cmp         false       mount       sleep       uptime
+    ?           dirname     fdinfo      mv          source      usleep
+    alias       dd          free        pidof       test        xd
+    unalias     df          help        printf      time
+    basename    dmesg       hexdump     ps          true
+    break       echo        kill        pwd         truncate
+    cat         env         ls          rm          uname
+    cd          exec        mkdir       rmdir       umount
+nsh>
+```
 
 # Emulate BL808 GPIO to Blink an LED
 
