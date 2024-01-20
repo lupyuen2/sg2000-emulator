@@ -216,7 +216,9 @@ plic_write: offset=0x201004, val=0x14
 plic_update_mip: reset_mip, pending=0x0, served=0x0
 ```
 
-TODO: Why NuttX won't read UART Input?
+Why NuttX won't read UART Input? Need to set [UART RX FIFO Available is always 1](https://github.com/lupyuen/ox64-tinyemu/commit/de9ab23bc6e9306764967a0f712ba7634b9d3da8)
+
+TODO
 
 # Emulate OpenSBI for System Timer
 
