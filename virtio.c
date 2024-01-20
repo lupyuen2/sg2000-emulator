@@ -1299,7 +1299,7 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
 
 int virtio_console_get_write_len(VIRTIODevice *s)
 {
-    puts("virtio_console_get_write_len");////
+    //puts("virtio_console_get_write_len");////
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
     int desc_idx;
