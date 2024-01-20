@@ -6,7 +6,7 @@
 
 (Instead of Machine Mode)
 
-See https://github.com/lupyuen/nuttx-tinyemu
+Continues from [nuttx-tinyemu](https://github.com/lupyuen/nuttx-tinyemu)...
 
 # Start NuttX Kernel in Supervisor Mode
 
