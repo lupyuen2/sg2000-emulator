@@ -1336,6 +1336,9 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     printf("[%c]\n", buf[0]); ////
     // s->int_status |= 1;
     // set_irq(s->irq, 1);
+
+    // TODO: Clear the interrupt after reading keypress
+    // set_irq(s->irq, 0);
 #ifdef NOTUSED
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
