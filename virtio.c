@@ -1303,6 +1303,9 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
 
 int virtio_console_get_write_len(VIRTIODevice *s)
 {
+    //// Normally virtio_console_get_write_len returns 0 until VM Guest connects to VirtIO.
+    return 32; //// Now we're always ready for writes.
+#ifdef NOTUSED
     //puts("virtio_console_get_write_len");////
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
@@ -1320,6 +1323,7 @@ int virtio_console_get_write_len(VIRTIODevice *s)
     if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))
         return 0;
     return write_size;
+#endif  // NOTUSED
 }
 
 int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
