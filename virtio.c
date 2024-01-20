@@ -1287,6 +1287,9 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
 
 BOOL virtio_console_can_write_data(VIRTIODevice *s)
 {
+    //// Normally virtio_console_can_write_data is false until VM Guest connects to VirtIO.
+    return 1; //// Now we always allow write data.
+#ifdef NOTUSED
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
@@ -1295,6 +1298,7 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
         return FALSE;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
     return qs->last_avail_idx != avail_idx;
+#endif  // NOTUSED
 }
 
 int virtio_console_get_write_len(VIRTIODevice *s)
