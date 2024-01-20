@@ -383,7 +383,9 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
             //// Begin Test: Intercept Memory-Mapped I/O
             switch(paddr) {
             case 0x30002084:     // uart_fifo_config_1: Is UART Ready?
-                ret = 32; break; // UART TX is always ready, default TX FIFO Available is 32
+                ret = 32         // UART TX is always ready, default TX FIFO Available is 32
+                    | (1 << 8);  // UART RX FIFO Available is always 1
+                break;
 
             // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
             case 0x30002020:
