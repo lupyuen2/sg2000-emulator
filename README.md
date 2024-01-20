@@ -142,11 +142,19 @@ plic_update_mip: set_mip, pending=0x80000, served=0x0
 raise_exception: cause=-2147483639
 raise_exception: sleep
 raise_exception2: cause=-2147483639, tval=0x0
+
+## Claim Interrupt
 plic_read: offset=0x201004
 plic_update_mip: reset_mip, pending=0x80000, served=0x80000
+
+## Handle Interrupt
 target_read_slow: invalid physical address 0x0000000030002020
 target_read_slow: invalid physical address 0x0000000030002024
+
+## Complete Interrupt
 plic_write: offset=0x201004, val=0x14
+
+## Loop Again
 plic_update_mip: set_mip, pending=0x80000, served=0x0
 raise_exception: cause=-2147483639
 raise_exception: sleep
@@ -156,9 +164,6 @@ plic_update_mip: reset_mip, pending=0x80000, served=0x80000
 target_read_slow: invalid physical address 0x0000000030002020
 target_read_slow: invalid physical address 0x0000000030002024
 plic_write: offset=0x201004, val=0x14
-plic_update_mip: set_mip, pending=0x80000, served=0x0
-raise_exception: cause=-2147483639
-raise_exception: sleep
 ```
 
 To prevent looping: Need to [Clear the interrupt after reading keypress](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117)
