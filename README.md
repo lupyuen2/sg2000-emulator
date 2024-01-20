@@ -161,7 +161,33 @@ raise_exception: cause=-2147483639
 raise_exception: sleep
 ```
 
-[TODO: Clear the interrupt after reading keypress](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117)
+To prevent looping: Need to [Clear the interrupt after reading keypress](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117)
+
+https://github.com/lupyuen2/wip-pinephone-nuttx/blob/tinyemu4/arch/risc-v/src/bl808/bl808_serial.c#L166-L224
+
+```c
+static int __uart_interrupt(int irq, void *context, void *arg) {
+  // 0x000020  /* UART interrupt status */
+  int_status = getreg32(BL808_UART_INT_STS(uart_idx));
+
+  // 0x000024  /* UART interrupt mask */
+  int_mask = getreg32(BL808_UART_INT_MASK(uart_idx));
+
+  /* Length of uart rx data transfer arrived interrupt */
+  if ((int_status & UART_INT_STS_URX_END_INT) &&
+      !(int_mask & UART_INT_MASK_CR_URX_END_MASK))
+    {
+      // 0x000028  /* UART interrupt clear */
+      putreg32(UART_INT_CLEAR_CR_URX_END_CLR,
+               BL808_UART_INT_CLEAR(uart_idx));
+      /* Receive Data ready */
+      uart_recvchars(dev);
+    }
+```
+
+TODO: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
+
+TODO: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
 
 # Emulate OpenSBI for System Timer
 
