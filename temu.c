@@ -595,7 +595,6 @@ void virt_machine_run(VirtMachine *m)
             len = min_int(len, sizeof(buf));
             ret = m->console->read_data(m->console->opaque, buf, len);
             if (ret > 0) {
-                printf("[%c]", buf[0]); ////
                 virtio_console_write_data(m->console_dev, buf, ret);
             }
         }
