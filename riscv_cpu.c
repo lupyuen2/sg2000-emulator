@@ -1169,8 +1169,12 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     causel = cause & 0x7fffffff;
     if (cause & CAUSE_INTERRUPT)
         causel |= (target_ulong)1 << (s->cur_xlen - 1);
-    
+
+    //// TODO: ECALL from Supervisor Mode should go to Machine Mode. Fix mideleg / medeleg
+    // if (cause == CAUSE_SUPERVISOR_ECALL) { deleg = 0; }////
+
     if (deleg) {
+        puts("raise_exception2: smode");////
         s->scause = causel;
         s->sepc = s->pc;
         s->stval = tval;
@@ -1192,8 +1196,13 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         s->mstatus &= ~MSTATUS_MIE;
         set_priv(s, PRV_M);
         s->pc = s->mtvec;
+
+        puts("raise_exception2: mmode");////
+        // s->mepc += 4;////
+        // sleep(4);////
     }
     //// Begin Test: Quit if cause=2, otherwise it will loop forever
+    if (cause == 2 && tval == 0xc0102573) { s->pc += 4; return; }  // Ignore `rdtime a0`
     if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
     //// End Test
 }

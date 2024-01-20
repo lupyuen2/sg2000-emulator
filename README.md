@@ -441,6 +441,8 @@ NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
 
 TODO
 
+[Emulate OpenSBI for System Timer](https://github.com/lupyuen/ox64-tinyemu/commit/2a40b3eb9dbac9e5fffb9e57d6af47ac9a15e5cd)
+
 # Emulate BL808 GPIO to Blink an LED
 
 TODO

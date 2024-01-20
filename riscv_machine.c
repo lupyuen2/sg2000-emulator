@@ -883,6 +883,10 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     // WRITE_CSR(mideleg, 0xffff);
     q[pc++] = 0x30379073;  // csrw mideleg, a5
 
+    // TODO:
+    // Boot HART MIDELEG         : 0x0000000000000222
+    // Boot HART MEDELEG         : 0x000000000000b109
+
     // Set mstatus to S-mode and enable SUM
     // CLEAR_CSR(mstatus, ~MSTATUS_MPP_MASK);
     q[pc++] = 0x000177f9;  // lui a5, 0xffffe ; nop
@@ -900,6 +904,9 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
 
     // Sentinel to catch overrun
     q[pc++] = 0x12345678;
+
+    // Machine Mode ECALL: Always return
+    // *(uint32_t *)(ram_ptr + 0x0) = 0x30200073;  // mret
     //// End Test
 }
 
