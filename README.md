@@ -10,9 +10,13 @@ See https://github.com/lupyuen/nuttx-tinyemu
 
 # Start NuttX Kernel in Supervisor Mode
 
-Based on [NuttX Start Code for 64-bit RISC-V Kernel Mode (rv-virt:knsh64)](https://gist.github.com/lupyuen/368744ef01b7feba10c022cd4f4c5ef2)...
+_NuttX needs to boot in Supervisor Mode, not Machine Mode. How to fix this in TinyEMU?_
 
-We [MRET to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393) and [dump MCAUSE 2: Illegal Instruction](https://github.com/lupyuen/ox64-tinyemu/commit/37c2d1169706a56afbd2d7d2a13624b58269e1ef#diff-2080434ac7de762b1948a6bc493874b21b9e3df3de8b9e52de23bfdcec354abd)...
+We copy to TinyEMU Boot Code the Machine-Mode Start Code from [NuttX Start Code for 64-bit RISC-V Kernel Mode (rv-virt:knsh64)](https://gist.github.com/lupyuen/368744ef01b7feba10c022cd4f4c5ef2)...
+
+- [Execute the MRET Instruction to jump from Machine Mode to Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/e62d49f1a8b27002871f712e80b1785442e23393)
+
+- [Dump the RISC-V Registers MCAUSE 2: Illegal Instruction](https://github.com/lupyuen/ox64-tinyemu/commit/37c2d1169706a56afbd2d7d2a13624b58269e1ef#diff-2080434ac7de762b1948a6bc493874b21b9e3df3de8b9e52de23bfdcec354abd) (for easier troubleshooting)
 
 ```text
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
@@ -33,7 +37,7 @@ raise_exception2: cause=2, tval=0x0
 pc =0000000000000000 ra =0000000000000000 sp =0000000050407c00 gp = 
 ```
 
-Which comes from...
+Which fails with an Illegal Instuction. The offending code comes from...
 
 ```text
 nuttx/arch/risc-v/src/chip/bl808_head.S:124
@@ -43,9 +47,11 @@ nuttx/arch/risc-v/src/chip/bl808_head.S:124
     50200074:	10401073          	csrw	sie,zero
 ```
 
+_Why is this instruction invalid?_
+
 `csrw sie,zero` is invalid because we're in User Mode (`priv=U`), not Supervisor Mode.
 
-So we [set mstatus to S-mode and enable SUM](https://github.com/lupyuen/ox64-tinyemu/commit/d379d92bfe544681e0560306a1aad96f5792da9e)...
+So we [set MSTATUS to Supervisor Mode and enable SUM](https://github.com/lupyuen/ox64-tinyemu/commit/d379d92bfe544681e0560306a1aad96f5792da9e).
 
 ```text
 TinyEMU Emulator for Ox64 BL808 RISC-V SBC
@@ -64,9 +70,9 @@ priv=M mstatus=0000000a00000000 cycles=4
 tinyemu: Unknown mcause 2, quitting
 ```
 
-We hit an Illegal Instruction caused by an unpadded 16-bit instruction.
+Now we hit an Illegal Instruction caused by an unpadded 16-bit instruction: 0x879b0000.
 
-So we [insert NOP to pad 16-bit RISC-V Instructions to 32-bit](https://github.com/lupyuen/ox64-tinyemu/commit/23a36478cf03561d40f357f876284c09722ce455)...
+TinyEMU requires all Boot Code Instructions to be 32-bit. So we [insert NOP (0x0001) to pad 16-bit RISC-V Instructions to 32-bit](https://github.com/lupyuen/ox64-tinyemu/commit/23a36478cf03561d40f357f876284c09722ce455).
 
 ```text
 work_start_lowpri: Starting low-priority kernel worker thread(s)
@@ -101,7 +107,7 @@ tinyemu: Unknown mcause 2, quitting
 
 But the ECALL goes from User Mode (`priv=U`) to Machine Mode (`priv=M`), not Supervisor Mode!
 
-We [set exception and interrupt delegation for S-mode](https://github.com/lupyuen/ox64-tinyemu/commit/9536e86217bcccbe15272dc4450eac9fab173b03)...
+We [set the Exception and Interrupt delegation for Supervisor Mode](https://github.com/lupyuen/ox64-tinyemu/commit/9536e86217bcccbe15272dc4450eac9fab173b03).
 
 ```text
 work_start_lowpri: Starting low-priority kernel worker thread(s)
@@ -116,23 +122,23 @@ Finally NuttX Shell starts OK yay!
 
 Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
 
-Up Next: Emulate UART Interrupts for Console Input
-
 # Emulate UART Interrupts for Console Input
 
-TODO
+_How will we emulate UART Interrupts to support Console Input?_
 
-[Set VirtIO IRQ to UART3 IRQ](https://github.com/lupyuen/ox64-tinyemu/commit/6841e7fe90f2826b54751e4fff2fe9ab3872bd99)
+We modify the VirtIO Console Driver in TinyEMU so that it behaves like BL808 UART. And we switch the VirtIO IRQ so that it pretends to be BL808 UART3...
 
-[Disable Console Resize event because it crashes VM Guest at startup](https://github.com/lupyuen/ox64-tinyemu/commit/dc869fe6a9a726d413e8a83c56cf40f271c6fe3c)
+- [Set VirtIO IRQ to UART3 IRQ](https://github.com/lupyuen/ox64-tinyemu/commit/6841e7fe90f2826b54751e4fff2fe9ab3872bd99)
 
-[We always allow VirtIO Write Data](https://github.com/lupyuen/ox64-tinyemu/commit/93cd86a7311986e5063cb0c8e368f89cdae73e27)
+- [Disable Console Resize event because it crashes VM Guest at startup](https://github.com/lupyuen/ox64-tinyemu/commit/dc869fe6a9a726d413e8a83c56cf40f271c6fe3c)
 
-[Always ready for VirtIO Writes](https://github.com/lupyuen/ox64-tinyemu/commit/b893255b42a8aaa443f7264dc06537b96326b414)
+- [We always allow VirtIO Write Data](https://github.com/lupyuen/ox64-tinyemu/commit/93cd86a7311986e5063cb0c8e368f89cdae73e27)
 
-[Handle a keypress](https://github.com/lupyuen/ox64-tinyemu/commit/a3d029e6e08d1ee3147f41536df76dc3986cb23e)
+- [Ww're always ready for VirtIO Writes](https://github.com/lupyuen/ox64-tinyemu/commit/b893255b42a8aaa443f7264dc06537b96326b414)
 
-[To handle a keypress, we trigger the UART3 Interrupt](https://github.com/lupyuen/ox64-tinyemu/commit/3deaef2a5d5ca3ad8a4339c21be3b054fba4fda2)
+- [Handle a keypress](https://github.com/lupyuen/ox64-tinyemu/commit/a3d029e6e08d1ee3147f41536df76dc3986cb23e)
+
+- [To handle a keypress, we trigger the UART3 Interrupt](https://github.com/lupyuen/ox64-tinyemu/commit/3deaef2a5d5ca3ad8a4339c21be3b054fba4fda2)
 
 ```text
 nx_start: CPU0: Beginning Idle Loop
@@ -166,9 +172,10 @@ target_read_slow: invalid physical address 0x0000000030002024
 plic_write: offset=0x201004, val=0x14
 ```
 
-https://github.com/lupyuen2/wip-pinephone-nuttx/blob/tinyemu4/arch/risc-v/src/bl808/bl808_serial.c#L166-L224
+TinyEMU loops forever handling UART Interrupts. Because of our NuttX UART Driver: [bl808_serial.c](https://github.com/lupyuen2/wip-pinephone-nuttx/blob/tinyemu4/arch/risc-v/src/bl808/bl808_serial.c#L166-L224)
 
 ```c
+// NuttX Interrupt Handler for BL808 UART
 static int __uart_interrupt(int irq, void *context, void *arg) {
   // 0x000020  /* UART interrupt status */
   int_status = getreg32(BL808_UART_INT_STS(uart_idx));
@@ -188,11 +195,13 @@ static int __uart_interrupt(int irq, void *context, void *arg) {
     }
 ```
 
-[BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
+To make the NuttX Interrupt Handler work...
 
-[BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
+- UART Interrupt Status: [BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
 
-To prevent looping: [Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)](https://github.com/lupyuen/ox64-tinyemu/commit/f9c1841d7699ecc04f9ce4499f1c081ae50aa225)
+- UART Interrupt Mask: [BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)](https://github.com/lupyuen/ox64-tinyemu/commit/074f8c30cb4a39a0d2d0dfd195be31858c5c9e52)
+
+- To prevent looping: [Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)](https://github.com/lupyuen/ox64-tinyemu/commit/f9c1841d7699ecc04f9ce4499f1c081ae50aa225)
 
 ```text
 nx_start: CPU0: Beginning Idle Loop
@@ -216,7 +225,9 @@ plic_write: offset=0x201004, val=0x14
 plic_update_mip: reset_mip, pending=0x0, served=0x0
 ```
 
-[BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char](https://github.com/lupyuen/ox64-tinyemu/commit/63cba6275c850b668598120355240f5d485c4538)
+We pass the keypress from VirtoIO Console to the Emulated UART Input Register...
+
+- [BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char](https://github.com/lupyuen/ox64-tinyemu/commit/63cba6275c850b668598120355240f5d485c4538)
 
 Console Input works OK yay!
 
@@ -251,11 +262,17 @@ NuttX 12.4.0 96c2707 Jan 18 2024 12:07:28 risc-v ox64
 
 # Emulate OpenSBI for System Timer
 
-[Emulate OpenSBI for System Timer](https://github.com/lupyuen/ox64-tinyemu/commit/ab58cd2dc6a1d94b9bd13faa0f402a7ada4b270d)
+_How to emulate the OpenSBI ECALL to start the System Timer?_
 
-[Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.](https://github.com/lupyuen/ox64-tinyemu/commit/5cb2fb4e263b9e965777f567b053a0914f3cf368)
+For now we ignore the OpenSBI ECALL from NuttX, we'll fix later...
 
-Latest NuttX Build works OK yay!
+- [Emulate OpenSBI for System Timer](https://github.com/lupyuen/ox64-tinyemu/commit/ab58cd2dc6a1d94b9bd13faa0f402a7ada4b270d)
+
+Strangely TinyEMU crashes with an Illegal Instruction Exception at RDTTIME (Read System Timer). We patch it with NOP and handle later...
+
+- [Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.](https://github.com/lupyuen/ox64-tinyemu/commit/5cb2fb4e263b9e965777f567b053a0914f3cf368)
+
+The Latest NuttX Build includes an OpenSBI ECALL. And it works OK yay!
 
 Try the demo: https://lupyuen.github.io/nuttx-tinyemu/smode/
 
