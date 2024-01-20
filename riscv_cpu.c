@@ -387,10 +387,12 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
 
             // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
             case 0x30002020:
+                puts("read BL808_UART_INT_STS");
                 ret = (1 << 1); break;
 
             // Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
             case 0x30002024:
+                puts("read BL808_UART_INT_MASK");
                 ret = 0; break;
 
             default:  // Unknown Memory-Mapped I/O
@@ -498,6 +500,7 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
             }
             // Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
             case 0x30002028: {
+                printf("write BL808_UART_INT_CLEAR: 0x%x\n", val);
                 void virtio_ack_irq(void *device0);
                 virtio_ack_irq(NULL);
                 break;
