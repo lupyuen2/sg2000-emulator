@@ -130,6 +130,8 @@ TODO
 
 [Always ready for VirtIO Writes](https://github.com/lupyuen/ox64-tinyemu/commit/b893255b42a8aaa443f7264dc06537b96326b414)
 
+[Handle a keypress](https://github.com/lupyuen/ox64-tinyemu/commit/a3d029e6e08d1ee3147f41536df76dc3986cb23e)
+
 # Emulate OpenSBI for System Timer
 
 TODO

@@ -1269,7 +1269,9 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
                                        int desc_idx, int read_size,
                                        int write_size)
 {
-    puts("virtio_console_recv_request");////
+    //// TODO: Handle virtio_console_recv_request
+    puts("TODO: virtio_console_recv_request");////
+#ifdef NOTUSED
     VIRTIOConsoleDevice *s1 = (VIRTIOConsoleDevice *)s;
     CharacterDevice *cs = s1->cs;
     uint8_t *buf;
@@ -1282,6 +1284,7 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
         free(buf);
         virtio_consume_desc(s, queue_idx, desc_idx, 0);
     }
+#endif  // NOTUSED
     return 0;
 }
 
