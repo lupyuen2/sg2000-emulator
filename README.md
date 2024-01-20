@@ -166,8 +166,6 @@ target_read_slow: invalid physical address 0x0000000030002024
 plic_write: offset=0x201004, val=0x14
 ```
 
-To prevent looping: Need to [Clear the interrupt after reading keypress](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117)
-
 https://github.com/lupyuen2/wip-pinephone-nuttx/blob/tinyemu4/arch/risc-v/src/bl808/bl808_serial.c#L166-L224
 
 ```c
@@ -193,6 +191,8 @@ static int __uart_interrupt(int irq, void *context, void *arg) {
 TODO: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
 
 TODO: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
+
+TODO: To prevent looping: Need to [Clear the interrupt](https://github.com/lupyuen/ox64-tinyemu/commit/6b3e9c9865a6677e2dad34413ced9c894dec4117) after setting 0x30002028 (UART interrupt clear)
 
 # Emulate OpenSBI for System Timer
 
