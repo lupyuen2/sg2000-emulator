@@ -1130,7 +1130,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         flag = 1;
         flag = (cause & CAUSE_INTERRUPT) == 0;
         //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
-        if (cause == CAUSE_USER_ECALL) ////
+        if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_USER_ECALL) ////
             flag = 0;
 #endif
         if (flag) {
@@ -1149,9 +1149,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     //// Begin Test: Emulate OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
         puts("TODO: Emulate OpenSBI for System Timer");
-        printf("Before pc=%p\n", s->pc); ////
         s->pc += 4;  // Jump to the next instruction (ret)
-        printf("After pc=%p\n", s->pc); ////
         return; 
     }
     //// End Test
@@ -1170,11 +1168,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     if (cause & CAUSE_INTERRUPT)
         causel |= (target_ulong)1 << (s->cur_xlen - 1);
 
-    //// TODO: ECALL from Supervisor Mode should go to Machine Mode. Fix mideleg / medeleg
-    // if (cause == CAUSE_SUPERVISOR_ECALL) { deleg = 0; }////
-
     if (deleg) {
-        puts("raise_exception2: smode"); dump_regs(s);////
         s->scause = causel;
         s->sepc = s->pc;
         s->stval = tval;
@@ -1196,13 +1190,8 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         s->mstatus &= ~MSTATUS_MIE;
         set_priv(s, PRV_M);
         s->pc = s->mtvec;
-
-        puts("raise_exception2: mmode"); dump_regs(s);////
-        // s->mepc += 4;////
-        // sleep(4);////
     }
     //// Begin Test: Quit if cause=2, otherwise it will loop forever
-    if (cause == 2 && tval == 0xc0102573ul) { s->pc += 4; return; }  // Ignore `rdtime a0`
     if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
     //// End Test
 }
