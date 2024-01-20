@@ -231,7 +231,7 @@ plic_write: offset=0x201004, val=0x14
 plic_update_mip: reset_mip, pending=0x0, served=0x0
 ```
 
-We pass the keypress from VirtoIO Console to the Emulated UART Input Register...
+We pass the keypress from VirtIO Console to the Emulated UART Input Register...
 
 - [BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char](https://github.com/lupyuen/ox64-tinyemu/commit/63cba6275c850b668598120355240f5d485c4538)
 
