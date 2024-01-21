@@ -8,6 +8,10 @@
 
 (Instead of Machine Mode)
 
+Read the article...
+
+-   ["Emulate Ox64 BL808 in the Web Browser: Experiments with TinyEMU RISC-V Emulator and Apache NuttX RTOS"](https://lupyuen.github.io/articles/tinyemu2)
+
 Continues from [Part 1](https://github.com/lupyuen/nuttx-tinyemu)...
 
 # Start NuttX Kernel in Supervisor Mode
