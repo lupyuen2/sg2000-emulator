@@ -407,8 +407,6 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
                 char read_input(void);
                 ret = read_input();
 
-                if (ret == 'a') { riscv_cpu_set_mip(s, MIP_STIP); }////
-
                 // Clear the Input Buffer
                 void set_input(char ch);
                 set_input(0);
