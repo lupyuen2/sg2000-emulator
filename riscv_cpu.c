@@ -407,6 +407,8 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
                 char read_input(void);
                 ret = read_input();
 
+                if (ret == 'a') { riscv_cpu_set_mip(s, MIP_STIP); }////
+
                 // Clear the Input Buffer
                 void set_input(char ch);
                 set_input(0);
@@ -1106,7 +1108,7 @@ static void set_priv(RISCVCPUState *s, int priv)
 static void raise_exception2(RISCVCPUState *s, uint32_t cause,
                              target_ulong tval)
 {
-    printf("raise_exception2: cause=%d, tval=%p\n", cause, (void *)tval);////
+    printf("raise_exception2: cause=%d, tval=%p, pc=%p\n", cause, (void *)tval, s->pc);////
     BOOL deleg;
     target_ulong causel;
     
@@ -1149,9 +1151,28 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     //// Begin Test: Emulate OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
         puts("TODO: Emulate OpenSBI for System Timer");
+        printf("%s:\n", s->pc == 0x5020bad0 ? "Set Timer" : "Get Time");
+
+        printf("Before: reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
+        printf("Before: reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
+        printf("Before: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
+        printf("Before: reg %s=%p\n", reg_name[11], s->reg[11]); //// A1 is X11 (parm1)
+        printf("Before: reg %s=%p\n", reg_name[12], s->reg[12]); //// A2 is X12 (parm2)
+        printf("Before: reg %s=%p\n", reg_name[13], s->reg[13]); //// A3 is X13 (parm3)
+
+        // For OpenSBI Set Timer: Clear the pending timer interrupt bit
+        // https://github.com/riscv-non-isa/riscv-sbi-doc/blob/v1.0.0/riscv-sbi.adoc#61-function-set-timer-fid-0
+        riscv_cpu_reset_mip(s, MIP_STIP);
+
+        // For RDTIME: Return the time
+        // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
+        static uint64_t t = 0; s->reg[10] = t++ << 32; printf("After: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
+        sleep(1);
+
         s->pc += 4;  // Jump to the next instruction (ret)
         return; 
     }
+    if (cause == CAUSE_USER_ECALL) { printf("User ECALL: pc=%p\n", s->pc); } ////
     //// End Test
 
     if (s->priv <= PRV_S) {

@@ -915,7 +915,10 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
         // c0102573 rdtime a0
         const uint8_t search[]  = { 0x73, 0x25, 0x10, 0xc0 };
         // 00010001 nop ; nop
-        const uint8_t replace[] = { 0x01, 0x00, 0x01, 0x00 };
+        // const uint8_t replace[] = { 0x01, 0x00, 0x01, 0x00 };
+
+        // 00000073 ecall
+        const uint8_t replace[] = { 0x73, 0x00, 0x00, 0x00 };
 
         if (memcmp(&kernel_ptr[i], search,  sizeof(search)) == 0) {
             memcpy(&kernel_ptr[i], replace, sizeof(replace));
