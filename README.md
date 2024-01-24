@@ -37,6 +37,8 @@ nsh>
 
 [Handle System Timer with mtimecmp](https://github.com/lupyuen/ox64-tinyemu/commit/f00d40c0de3d97e93844626c0edfd3b19e8252db)
 
+[Emulator Timer Log](https://gist.github.com/lupyuen/31bde9c2563e8ea2f1764fb95c6ea0fc)
+
 Test `ostest`...
 
 ```text
