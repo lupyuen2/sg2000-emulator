@@ -33,6 +33,8 @@ nsh> usleep 1
 nsh> 
 ```
 
+[Patch DCACHE.IALL and SYNC.S to become ECALL](https://github.com/lupyuen/ox64-tinyemu/commit/b8671f76414747b6902a7dcb89f6fc3c8184075f)
+
 TODO: Test `ostest`
 
 # Emulate BL808 GPIO to Blink an LED
