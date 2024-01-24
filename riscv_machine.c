@@ -905,27 +905,38 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     q[pc++] = 0x34129073;  // csrw mepc, t0
     q[pc++] = 0x30200073;  // mret
 
-    // Sentinel to catch overrun
-    q[pc++] = 0x12345678;
-
-    // Machine Mode ECALL: Always return
-    // *(uint32_t *)(ram_ptr + 0x0) = 0x30200073;  // mret
-
-    // Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.
+    // Patch the Unknown Instructions to become ECALL and handle later
     uint8_t *kernel_ptr = get_ram_ptr(s, RAM_BASE_ADDR, TRUE);
     for (int i = 0; i < 0x10000; i++) {
-        // Patch RDTTIME to NOP
-        // c0102573 rdtime a0
-        const uint8_t search[]  = { 0x73, 0x25, 0x10, 0xc0 };
-        // 00010001 nop ; nop
-        // const uint8_t replace[] = { 0x01, 0x00, 0x01, 0x00 };
-
+        // ECALL Instruction
         // 00000073 ecall
-        const uint8_t replace[] = { 0x73, 0x00, 0x00, 0x00 };
+        const uint8_t ecall[] = { 0x73, 0x00, 0x00, 0x00 };
 
-        if (memcmp(&kernel_ptr[i], search,  sizeof(search)) == 0) {
-            memcpy(&kernel_ptr[i], replace, sizeof(replace));
-            printf("Patched RDTTIME (Read System Timer) at %p\n", RAM_BASE_ADDR + i);
+        // Patch RDTIME to become ECALL
+        // (Read System Time)
+        // c0102573 rdtime a0
+        const uint8_t rdtime[] = { 0x73, 0x25, 0x10, 0xc0 };
+        if (memcmp(&kernel_ptr[i], rdtime, sizeof(rdtime)) == 0) {
+            memcpy(&kernel_ptr[i], ecall,  sizeof(ecall));
+            printf("Patched RDTIME (Read System Time) at %p\n", RAM_BASE_ADDR + i);
+        }
+
+        // Patch DCACHE.IALL to become ECALL
+        // (Invalidate all Page Table Entries in the D-Cache)
+        // 0020000b DCACHE.IALL
+        const uint8_t dcache_iall[] = { 0x0b, 0x00, 0x20, 0x00 };
+        if (memcmp(&kernel_ptr[i], dcache_iall, sizeof(dcache_iall)) == 0) {
+            memcpy(&kernel_ptr[i], ecall,       sizeof(ecall));
+            printf("Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at %p\n", RAM_BASE_ADDR + i);
+        }
+
+        // Patch SYNC.S to become ECALL
+        // (Ensure that all Cache Operations are completed)
+        // 0190000b SYNC.S
+        const uint8_t sync_s[] = { 0x0b, 0x00, 0x90, 0x01 };
+        if (memcmp(&kernel_ptr[i], sync_s, sizeof(sync_s)) == 0) {
+            memcpy(&kernel_ptr[i], ecall,  sizeof(ecall));
+            printf("Patched SYNC.S (Ensure that all Cache Operations are completed) at %p\n", RAM_BASE_ADDR + i);
         }
     }
     //// End Test

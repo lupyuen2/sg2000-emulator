@@ -1114,7 +1114,14 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     _info("raise_exception2: cause=%d, tval=%p, pc=%p\n", cause, (void *)tval, s->pc);////
     BOOL deleg;
     target_ulong causel;
-    
+
+    //// Begin Test: Quit if Illegal Instruction, otherwise it will loop forever
+    if (cause == 2) {
+        printf("\ntinyemu: Illegal instruction, quitting: pc=%p, instruction=%p\n", s->pc, tval); 
+        exit(1); 
+    }
+    //// End Test
+
 #if defined(DUMP_EXCEPTIONS) || defined(DUMP_MMU_EXCEPTIONS) || defined(DUMP_INTERRUPTS)
     {
         int flag;
@@ -1150,13 +1157,6 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         }
     }
 #endif
-
-    //// Begin Test: Quit if Illegal Instruction, otherwise it will loop forever
-    if (cause == 2) {
-        printf("tinyemu: Illegal instruction, quitting: pc=%p, instruction=%p\n", s->pc, tval); 
-        exit(1); 
-    }
-    //// End Test
 
     //// Begin Test: Emulate OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
