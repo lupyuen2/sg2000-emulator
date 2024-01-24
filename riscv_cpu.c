@@ -1151,6 +1151,13 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     }
 #endif
 
+    //// Begin Test: Quit if Illegal Instruction, otherwise it will loop forever
+    if (cause == 2) {
+        printf("tinyemu: Illegal instruction, quitting: pc=%p, instruction=%p\n", s->pc, tval); 
+        exit(1); 
+    }
+    //// End Test
+
     //// Begin Test: Emulate OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
         _info("TODO: Emulate OpenSBI for System Timer\n");
@@ -1216,9 +1223,6 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         set_priv(s, PRV_M);
         s->pc = s->mtvec;
     }
-    //// Begin Test: Quit if cause=2, otherwise it will loop forever
-    if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
-    //// End Test
 }
 
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
