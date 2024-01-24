@@ -32,6 +32,9 @@
 #include "list.h"
 #include "virtio.h"
 
+#define _info(...) {} ////
+// #define _info printf ////
+
 #define DEBUG_VIRTIO ////
 
 /* MMIO addresses - from the Linux kernel */
@@ -1300,7 +1303,7 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
-    //if (!qs->ready) { printf("virtio_console_can_write_data: ready=%d\n", qs->ready); }////
+    //if (!qs->ready) { _info("virtio_console_can_write_data: ready=%d\n", qs->ready); }////
     if (!qs->ready)
         return FALSE;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
@@ -1337,7 +1340,7 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
 {
     //// To handle a keypress, we trigger the UART3 Interrupt.
     //// Pass the keypress to VM Guest
-    printf("[%c]\n", buf[0]); ////
+    _info("[%c]\n", buf[0]); ////
     set_input(buf[0]);
     s->int_status |= 1;
     set_irq(s->irq, 1);
@@ -1348,11 +1351,11 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     int desc_idx;
     uint16_t avail_idx;
 
-    printf("virtio_console_write_data: ready=%d\n", qs->ready);////
+    _info("virtio_console_write_data: ready=%d\n", qs->ready);////
     if (!qs->ready)
         return 0;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    printf("virtio_console_write_data: last_avail_idx=%d, avail_idx=%d\n", qs->last_avail_idx, avail_idx);////
+    _info("virtio_console_write_data: last_avail_idx=%d, avail_idx=%d\n", qs->last_avail_idx, avail_idx);////
     if (qs->last_avail_idx == avail_idx)
         return 0;
     desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
@@ -1360,7 +1363,7 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, buf_len);
     virtio_consume_desc(s, queue_idx, desc_idx, buf_len);
     qs->last_avail_idx++;
-    printf("virtio_console_write_data: buf[0]=%c, buf_len=%d\n", buf[0], buf_len);////
+    _info("virtio_console_write_data: buf[0]=%c, buf_len=%d\n", buf[0], buf_len);////
     return buf_len;
 #endif  // NOTUSED
 }
@@ -2687,11 +2690,9 @@ void virtio_ack_irq(VIRTIODevice *device0) {
     if (device0 != NULL) { device = device0; return; }
     if (device == NULL) { puts("virtio_ack_irq: Missing device"); }
 
-    puts("virtio_ack_irq");
-    // device->int_status &= ~val;
-    // if (device->int_status == 0) {
-        set_irq(device->irq, 0);
-    // }
+    // Trigger the Device IRQ
+    _info("virtio_ack_irq");
+    set_irq(device->irq, 0);
 }
 
 //// Remember and return the Input Char

@@ -40,6 +40,9 @@
 #include "elf.h"
 #include "compress.h"
 
+#define _info(...) {} ////
+// #define _info printf ////
+
 /* RISCV machine */
 
 typedef struct RISCVMachine {
@@ -79,6 +82,15 @@ typedef struct RISCVMachine {
 #define RTC_FREQ 10000000
 #define RTC_FREQ_DIV 16 /* arbitrary, relative to CPU freq to have a
                            10 MHz frequency */
+
+void set_timecmp(RISCVMachine *machine0, uint64_t timecmp);
+void print_console(RISCVMachine *machine0, const char *buf, int len);
+
+uint64_t ecall_addr = 0;
+uint64_t rdtime_addr = 0;
+uint64_t dcache_iall_addr = 0;
+uint64_t sync_s_addr = 0;
+uint64_t real_time = 0;
 
 static uint64_t rtc_get_real_time(RISCVMachine *s)
 {
@@ -245,10 +257,10 @@ static void plic_update_mip(RISCVMachine *s)
     uint32_t mask;
     mask = s->plic_pending_irq & ~s->plic_served_irq;
     if (mask) {
-        printf("plic_update_mip: set_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
+        _info("plic_update_mip: set_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
         riscv_cpu_set_mip(cpu, MIP_MEIP | MIP_SEIP);
     } else {
-        printf("plic_update_mip: reset_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
+        _info("plic_update_mip: reset_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
         riscv_cpu_reset_mip(cpu, MIP_MEIP | MIP_SEIP);
     }
 }
@@ -258,7 +270,7 @@ static void plic_update_mip(RISCVMachine *s)
 
 static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
 {
-    printf("plic_read: offset=0x%x\n", offset);////
+    _info("plic_read: offset=0x%x\n", offset);////
     RISCVMachine *s = opaque;
     uint32_t val, mask;
     int i;
@@ -288,7 +300,7 @@ static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
 static void plic_write(void *opaque, uint32_t offset, uint32_t val,
                        int size_log2)
 {
-    printf("plic_write: offset=0x%x, val=0x%x\n", offset, val);////
+    _info("plic_write: offset=0x%x, val=0x%x\n", offset, val);////
     RISCVMachine *s = opaque;
     
     assert(size_log2 == 2);
@@ -307,7 +319,7 @@ static void plic_write(void *opaque, uint32_t offset, uint32_t val,
 
 static void plic_set_irq(void *opaque, int irq_num, int state)
 {
-    printf("plic_set_irq: irq_num=%d, state=%d\n", irq_num, state);////
+    _info("plic_set_irq: irq_num=%d, state=%d\n", irq_num, state);////
     RISCVMachine *s = opaque;
     uint32_t mask;
 
@@ -902,24 +914,45 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     q[pc++] = 0x34129073;  // csrw mepc, t0
     q[pc++] = 0x30200073;  // mret
 
-    // Sentinel to catch overrun
-    q[pc++] = 0x12345678;
-
-    // Machine Mode ECALL: Always return
-    // *(uint32_t *)(ram_ptr + 0x0) = 0x30200073;  // mret
-
-    // Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.
+    // Patch the Unknown Instructions to become ECALL and handle later
     uint8_t *kernel_ptr = get_ram_ptr(s, RAM_BASE_ADDR, TRUE);
     for (int i = 0; i < 0x10000; i++) {
-        // Patch RDTTIME to NOP
-        // c0102573 rdtime a0
-        const uint8_t search[]  = { 0x73, 0x25, 0x10, 0xc0 };
-        // 00010001 nop ; nop
-        const uint8_t replace[] = { 0x01, 0x00, 0x01, 0x00 };
+        // ECALL Instruction
+        // 00000073 ecall
+        const uint8_t ecall[] = { 0x73, 0x00, 0x00, 0x00 };
+        if (memcmp(&kernel_ptr[i], ecall, sizeof(ecall)) == 0) {
+            ecall_addr = RAM_BASE_ADDR + i;
+            printf("Found ECALL (Start System Timer) at %p\n", ecall_addr);
+        }
 
-        if (memcmp(&kernel_ptr[i], search,  sizeof(search)) == 0) {
-            memcpy(&kernel_ptr[i], replace, sizeof(replace));
-            printf("Patched RDTTIME (Read System Timer) at %p\n", RAM_BASE_ADDR + i);
+        // Patch RDTIME to become ECALL
+        // (Read System Time)
+        // c0102573 rdtime a0
+        const uint8_t rdtime[] = { 0x73, 0x25, 0x10, 0xc0 };
+        if (memcmp(&kernel_ptr[i], rdtime, sizeof(rdtime)) == 0) {
+            memcpy(&kernel_ptr[i], ecall,  sizeof(ecall));
+            rdtime_addr = RAM_BASE_ADDR + i;
+            printf("Patched RDTIME (Read System Time) at %p\n", rdtime_addr);
+        }
+
+        // Patch DCACHE.IALL to become ECALL
+        // (Invalidate all Page Table Entries in the D-Cache)
+        // 0020000b DCACHE.IALL
+        const uint8_t dcache_iall[] = { 0x0b, 0x00, 0x20, 0x00 };
+        if (memcmp(&kernel_ptr[i], dcache_iall, sizeof(dcache_iall)) == 0) {
+            memcpy(&kernel_ptr[i], ecall,       sizeof(ecall));
+            dcache_iall_addr = RAM_BASE_ADDR + i;
+            printf("Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at %p\n", dcache_iall_addr);
+        }
+
+        // Patch SYNC.S to become ECALL
+        // (Ensure that all Cache Operations are completed)
+        // 0190000b SYNC.S
+        const uint8_t sync_s[] = { 0x0b, 0x00, 0x90, 0x01 };
+        if (memcmp(&kernel_ptr[i], sync_s, sizeof(sync_s)) == 0) {
+            memcpy(&kernel_ptr[i], ecall,  sizeof(ecall));
+            sync_s_addr = RAM_BASE_ADDR + i;
+            printf("Patched SYNC.S (Ensure that all Cache Operations are completed) at %p\n", sync_s_addr);
         }
     }
     //// End Test
@@ -1013,7 +1046,6 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
     if (p->console) {
         //// Begin Test: Save the Console
         const char *msg = "TinyEMU Emulator for Ox64 BL808 RISC-V SBC\r\n";
-        void print_console(RISCVMachine *machine0, const char *buf, int len);
         print_console(s, msg, strlen(msg));
         //// End Test
         vbus->irq = &s->plic_irq[irq_num];
@@ -1102,6 +1134,7 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
               p->cmdline,
               p->files[VM_FILE_INITRD].buf, p->files[VM_FILE_INITRD].len);
     
+    set_timecmp(s, 0); //// Init the System Timer
     return (VirtMachine *)s;
 }
 
@@ -1136,6 +1169,16 @@ static int riscv_machine_get_sleep_duration(VirtMachine *s1, int delay)
     }
     if (!riscv_cpu_get_power_down(s))
         delay = 0;
+
+    //// Begin Test: Trigger the Supervisor-Mode Timer Interrupt
+    real_time = rtc_get_time(m);
+    if (!(riscv_cpu_get_mip(s) & MIP_STIP)) {
+        const int64_t delay2 = m->timecmp - rtc_get_time(m);
+        if (delay2 <= 0) {
+            riscv_cpu_set_mip(s, MIP_STIP);
+        }
+    }
+    //// End Test
     return delay;
 }
 
@@ -1180,7 +1223,17 @@ const VirtMachineClass riscv_machine_class = {
     riscv_vm_send_key_event,
 };
 
-//// Begin Test: Print to Console
+//// Begin Test
+// Set Timer
+void set_timecmp(RISCVMachine *machine0, uint64_t timecmp) {
+    static RISCVMachine *machine = NULL;
+    if (machine0 != NULL) { machine = machine0; return; }
+    if (machine == NULL) { puts("set_timecmp: machine is null"); return; }
+    machine->timecmp = timecmp;
+    _info("set_timecmp: timecmp=%p\n", timecmp);
+}
+
+// Print to Console
 void print_console(RISCVMachine *machine0, const char *buf, int len) {
     static RISCVMachine *machine = NULL;
     if (machine0 != NULL) { machine = machine0; }

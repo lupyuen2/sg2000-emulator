@@ -33,7 +33,8 @@
 #include "iomem.h"
 #include "riscv_cpu.h"
 
-void print_console(void *machine0, const char *buf, int len);
+#define _info(...) {} ////
+// #define _info printf ////
 
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
@@ -42,7 +43,7 @@ void print_console(void *machine0, const char *buf, int len);
 #error CONFIG_RISCV_MAX_XLEN must be defined
 #endif
 
-#define DUMP_INVALID_MEM_ACCESS
+// #define DUMP_INVALID_MEM_ACCESS
 #define DUMP_MMU_EXCEPTIONS
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
@@ -51,6 +52,13 @@ void print_console(void *machine0, const char *buf, int len);
 #define CONFIG_LOGFILE
  
 #include "riscv_cpu_priv.h"
+
+void print_console(void *machine0, const char *buf, int len); ////
+extern uint64_t ecall_addr;
+extern uint64_t rdtime_addr;
+extern uint64_t dcache_iall_addr;
+extern uint64_t sync_s_addr;
+extern uint64_t real_time;
 
 #if FLEN > 0
 #include "softfp.h"
@@ -394,12 +402,12 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
 
             // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
             case 0x30002020:
-                puts("read BL808_UART_INT_STS");
+                _info("read BL808_UART_INT_STS\n");
                 ret = (1 << 1); break;
 
             // Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
             case 0x30002024:
-                puts("read BL808_UART_INT_MASK");
+                _info("read BL808_UART_INT_MASK\n");
                 ret = 0; break;
 
             // Console Input: BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char
@@ -517,7 +525,7 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
             }
             // Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
             case 0x30002028: {
-                printf("write BL808_UART_INT_CLEAR: 0x%x\n", val);
+                _info("write BL808_UART_INT_CLEAR: 0x%x\n", val);
                 void virtio_ack_irq(void *device0);
                 virtio_ack_irq(NULL);
                 break;
@@ -527,6 +535,8 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
                 printf("target_write_slow: invalid physical address 0x");
                 print_target_ulong(paddr);
                 printf("\n");
+#else
+                break;
 #endif                
             }
             //// End Test
@@ -1106,10 +1116,17 @@ static void set_priv(RISCVCPUState *s, int priv)
 static void raise_exception2(RISCVCPUState *s, uint32_t cause,
                              target_ulong tval)
 {
-    printf("raise_exception2: cause=%d, tval=%p\n", cause, (void *)tval);////
+    _info("raise_exception2: cause=%d, tval=%p, pc=%p\n", cause, (void *)tval, s->pc);////
     BOOL deleg;
     target_ulong causel;
-    
+
+    //// Begin Test: Quit if Illegal Instruction, otherwise it will loop forever
+    if (cause == 2) {
+        printf("\ntinyemu: Illegal instruction, quitting: pc=%p, instruction=%p\n", s->pc, tval); 
+        exit(1); 
+    }
+    //// End Test
+
 #if defined(DUMP_EXCEPTIONS) || defined(DUMP_MMU_EXCEPTIONS) || defined(DUMP_INTERRUPTS)
     {
         int flag;
@@ -1129,7 +1146,6 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 #ifdef DUMP_EXCEPTIONS
         flag = 1;
         flag = (cause & CAUSE_INTERRUPT) == 0;
-        //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
         if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_USER_ECALL) ////
             flag = 0;
 #endif
@@ -1146,12 +1162,38 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     }
 #endif
 
-    //// Begin Test: Emulate OpenSBI for System Timer
+    //// Begin Test: Emulate Patched Instructions and OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
-        puts("TODO: Emulate OpenSBI for System Timer");
+
+        if (s->pc == ecall_addr) {
+            // For OpenSBI Set Timer: Clear the pending timer interrupt bit
+            // https://github.com/riscv-non-isa/riscv-sbi-doc/blob/v1.0.0/riscv-sbi.adoc#61-function-set-timer-fid-0
+            _info("Set Timer\n");
+            _info("  reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
+            _info("  reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
+            _info("  reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
+            riscv_cpu_reset_mip(s, MIP_STIP);
+
+            // If parm0 is not -1, set the System Timer (timecmp)
+            uint64_t timecmp = s->reg[10];  // A0 is X10 (parm0)
+            if (timecmp != (uint64_t) -1) {
+                void set_timecmp(void *machine0, uint64_t timecmp);
+                set_timecmp(NULL, timecmp);
+            }
+        } else if (s->pc == rdtime_addr) {
+            // For RDTIME: Return the time
+            // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
+            _info("Get Time\n");
+            // static uint64_t t = 0;
+            // s->reg[10] = t++;  // Not too much or usleep will hang
+            s->reg[10] = real_time;
+            _info("  Return reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
+        }
+
         s->pc += 4;  // Jump to the next instruction (ret)
         return; 
     }
+    if (cause == CAUSE_USER_ECALL) { _info("User ECALL: pc=%p\n", s->pc); } ////
     //// End Test
 
     if (s->priv <= PRV_S) {
@@ -1191,17 +1233,11 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         set_priv(s, PRV_M);
         s->pc = s->mtvec;
     }
-    //// Begin Test: Quit if cause=2, otherwise it will loop forever
-    if (cause == 2) { puts("tinyemu: Unknown mcause 2, quitting"); exit(1); }
-    //// End Test
 }
 
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
-    printf("raise_exception: cause=%d\n", cause);////
-    #ifndef EMSCRIPTEN ////
-    // printf("raise_exception: sleep\n"); sleep(4);////
-    #endif  //// EMSCRIPTEN
+    _info("raise_exception: cause=%d\n", cause);////
     raise_exception2(s, cause, 0);
 }
 
