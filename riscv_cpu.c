@@ -34,9 +34,7 @@
 #include "riscv_cpu.h"
 
 #define _info(...) {} ////
-// #define _info(...) printf(...) ////
-
-void print_console(void *machine0, const char *buf, int len); ////
+// #define _info printf ////
 
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
@@ -54,6 +52,12 @@ void print_console(void *machine0, const char *buf, int len); ////
 #define CONFIG_LOGFILE
  
 #include "riscv_cpu_priv.h"
+
+void print_console(void *machine0, const char *buf, int len); ////
+extern uint64_t ecall_addr;
+extern uint64_t rdtime_addr;
+extern uint64_t dcache_iall_addr;
+extern uint64_t sync_s_addr;
 
 #if FLEN > 0
 #include "softfp.h"
@@ -1141,7 +1145,6 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 #ifdef DUMP_EXCEPTIONS
         flag = 1;
         flag = (cause & CAUSE_INTERRUPT) == 0;
-        //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
         if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_USER_ECALL) ////
             flag = 0;
 #endif
@@ -1161,7 +1164,6 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     //// Begin Test: Emulate OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
         _info("TODO: Emulate OpenSBI for System Timer\n");
-        _info("%s:\n", s->pc == 0x5020bad0 ? "Set Timer" : "Get Time");
 
         _info("Before: reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
         _info("Before: reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
@@ -1170,15 +1172,20 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         _info("Before: reg %s=%p\n", reg_name[12], s->reg[12]); //// A2 is X12 (parm2)
         _info("Before: reg %s=%p\n", reg_name[13], s->reg[13]); //// A3 is X13 (parm3)
 
-        // For OpenSBI Set Timer: Clear the pending timer interrupt bit
-        // https://github.com/riscv-non-isa/riscv-sbi-doc/blob/v1.0.0/riscv-sbi.adoc#61-function-set-timer-fid-0
-        riscv_cpu_reset_mip(s, MIP_STIP);
+        if (s->pc == ecall_addr) {
+            // For OpenSBI Set Timer: Clear the pending timer interrupt bit
+            // https://github.com/riscv-non-isa/riscv-sbi-doc/blob/v1.0.0/riscv-sbi.adoc#61-function-set-timer-fid-0
+            _info("Set Timer\n");
+            riscv_cpu_reset_mip(s, MIP_STIP);
 
-        // For RDTIME: Return the time
-        // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
-        static uint64_t t = 0;
-        s->reg[10] = t++ << 8;  // Not too much or usleep will hang
-        _info("After: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
+        } else if (s->pc == rdtime_addr) {
+            // For RDTIME: Return the time
+            // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
+            _info("Get Time\n");
+            static uint64_t t = 0;
+            s->reg[10] = t++;  // Not too much or usleep will hang
+            _info("After: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
+        }
 
         s->pc += 4;  // Jump to the next instruction (ret)
         return; 

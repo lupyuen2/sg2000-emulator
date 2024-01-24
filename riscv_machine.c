@@ -41,7 +41,7 @@
 #include "compress.h"
 
 #define _info(...) {} ////
-// #define _info(...) printf(...) ////
+// #define _info printf ////
 
 /* RISCV machine */
 
@@ -82,6 +82,11 @@ typedef struct RISCVMachine {
 #define RTC_FREQ 10000000
 #define RTC_FREQ_DIV 16 /* arbitrary, relative to CPU freq to have a
                            10 MHz frequency */
+
+uint64_t ecall_addr = 0;
+uint64_t rdtime_addr = 0;
+uint64_t dcache_iall_addr = 0;
+uint64_t sync_s_addr = 0;
 
 static uint64_t rtc_get_real_time(RISCVMachine *s)
 {
@@ -911,6 +916,10 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
         // ECALL Instruction
         // 00000073 ecall
         const uint8_t ecall[] = { 0x73, 0x00, 0x00, 0x00 };
+        if (memcmp(&kernel_ptr[i], ecall, sizeof(ecall)) == 0) {
+            ecall_addr = RAM_BASE_ADDR + i;
+            printf("Found ECALL (Start System Timer) at %p\n", ecall_addr);
+        }
 
         // Patch RDTIME to become ECALL
         // (Read System Time)
@@ -918,7 +927,8 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
         const uint8_t rdtime[] = { 0x73, 0x25, 0x10, 0xc0 };
         if (memcmp(&kernel_ptr[i], rdtime, sizeof(rdtime)) == 0) {
             memcpy(&kernel_ptr[i], ecall,  sizeof(ecall));
-            printf("Patched RDTIME (Read System Time) at %p\n", RAM_BASE_ADDR + i);
+            rdtime_addr = RAM_BASE_ADDR + i;
+            printf("Patched RDTIME (Read System Time) at %p\n", rdtime_addr);
         }
 
         // Patch DCACHE.IALL to become ECALL
@@ -927,7 +937,8 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
         const uint8_t dcache_iall[] = { 0x0b, 0x00, 0x20, 0x00 };
         if (memcmp(&kernel_ptr[i], dcache_iall, sizeof(dcache_iall)) == 0) {
             memcpy(&kernel_ptr[i], ecall,       sizeof(ecall));
-            printf("Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at %p\n", RAM_BASE_ADDR + i);
+            dcache_iall_addr = RAM_BASE_ADDR + i;
+            printf("Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at %p\n", dcache_iall_addr);
         }
 
         // Patch SYNC.S to become ECALL
@@ -936,7 +947,8 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
         const uint8_t sync_s[] = { 0x0b, 0x00, 0x90, 0x01 };
         if (memcmp(&kernel_ptr[i], sync_s, sizeof(sync_s)) == 0) {
             memcpy(&kernel_ptr[i], ecall,  sizeof(ecall));
-            printf("Patched SYNC.S (Ensure that all Cache Operations are completed) at %p\n", RAM_BASE_ADDR + i);
+            sync_s_addr = RAM_BASE_ADDR + i;
+            printf("Patched SYNC.S (Ensure that all Cache Operations are completed) at %p\n", sync_s_addr);
         }
     }
     //// End Test

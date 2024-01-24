@@ -33,7 +33,7 @@
 #include "virtio.h"
 
 #define _info(...) {} ////
-// #define _info(...) printf(...) ////
+// #define _info printf ////
 
 #define DEBUG_VIRTIO ////
 
