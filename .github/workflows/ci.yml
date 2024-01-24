@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt update
       - run: sudo apt install libcurl4-openssl-dev libssl-dev zlib1g-dev libsdl2-dev
       - run: make
 
@@ -17,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo apt update
       - run: sudo apt install emscripten
       - run: make -f Makefile.js
 
