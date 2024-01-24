@@ -1175,10 +1175,7 @@ static int riscv_machine_get_sleep_duration(VirtMachine *s1, int delay)
     if (!(riscv_cpu_get_mip(s) & MIP_STIP)) {
         const int64_t delay2 = m->timecmp - rtc_get_time(m);
         if (delay2 <= 0) {
-            static uint64_t t = 0;
-            if (t++ % 100 == 0) {
-                riscv_cpu_set_mip(s, MIP_STIP);
-            }
+            riscv_cpu_set_mip(s, MIP_STIP);
         }
     }
     //// End Test
@@ -1233,7 +1230,7 @@ void set_timecmp(RISCVMachine *machine0, uint64_t timecmp) {
     if (machine0 != NULL) { machine = machine0; return; }
     if (machine == NULL) { puts("set_timecmp: machine is null"); return; }
     machine->timecmp = timecmp;
-    printf("set_timecmp: timecmp=%p\n", timecmp);
+    _info("set_timecmp: timecmp=%p\n", timecmp);
 }
 
 // Print to Console
