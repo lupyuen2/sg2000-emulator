@@ -60,6 +60,26 @@ up_dump_register: EPC: 0000000050202008
 
 `ostest` is OK yay!
 
+https://lupyuen.github.io/nuttx-tinyemu/timer/
+
+`expect` script works OK with Ox64 BL808 Emulator...
+
+```bash
+#!/usr/bin/expect
+set send_slow {1 0.001}
+spawn /Users/Luppy/riscv/ox64-tinyemu/temu root-riscv64.cfg
+
+expect "nsh> "
+send -s "uname -a\r"
+
+expect "nsh> "
+send -s "ostest\r"
+expect "ostest_main: Exiting with status -1"
+expect "nsh> "
+```
+
+We'll run this for Daily Automated Testing, right after the Daily Automated Build.
+
 # Emulate BL808 GPIO to Blink an LED
 
 TODO
