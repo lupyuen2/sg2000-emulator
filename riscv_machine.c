@@ -1141,7 +1141,10 @@ static int riscv_machine_get_sleep_duration(VirtMachine *s1, int delay)
         delay = 0;
 
     //// Begin Test: Trigger the Supervisor-Mode Timer Interrupt
-    static uint64_t t = 0; if (t++ % 100 == 0) { riscv_cpu_set_mip(s, MIP_STIP); } ////
+    static uint64_t t = 0;
+    if (t++ % 100 == 0) {
+        riscv_cpu_set_mip(s, MIP_STIP);
+    } ////
     //// End Test
     return delay;
 }

@@ -1165,7 +1165,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         // For RDTIME: Return the time
         // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
         static uint64_t t = 0;
-        s->reg[10] = t++;
+        s->reg[10] = t++ << 8;  // Not too much or usleep will hang
         printf("After: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
 
         s->pc += 4;  // Jump to the next instruction (ret)
