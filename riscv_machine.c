@@ -40,6 +40,9 @@
 #include "elf.h"
 #include "compress.h"
 
+#define _info(...) {} ////
+// #define _info(...) printf(...) ////
+
 /* RISCV machine */
 
 typedef struct RISCVMachine {
@@ -245,10 +248,10 @@ static void plic_update_mip(RISCVMachine *s)
     uint32_t mask;
     mask = s->plic_pending_irq & ~s->plic_served_irq;
     if (mask) {
-        printf("plic_update_mip: set_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
+        _info("plic_update_mip: set_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
         riscv_cpu_set_mip(cpu, MIP_MEIP | MIP_SEIP);
     } else {
-        printf("plic_update_mip: reset_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
+        _info("plic_update_mip: reset_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
         riscv_cpu_reset_mip(cpu, MIP_MEIP | MIP_SEIP);
     }
 }
@@ -258,7 +261,7 @@ static void plic_update_mip(RISCVMachine *s)
 
 static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
 {
-    printf("plic_read: offset=0x%x\n", offset);////
+    _info("plic_read: offset=0x%x\n", offset);////
     RISCVMachine *s = opaque;
     uint32_t val, mask;
     int i;
@@ -288,7 +291,7 @@ static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
 static void plic_write(void *opaque, uint32_t offset, uint32_t val,
                        int size_log2)
 {
-    printf("plic_write: offset=0x%x, val=0x%x\n", offset, val);////
+    _info("plic_write: offset=0x%x, val=0x%x\n", offset, val);////
     RISCVMachine *s = opaque;
     
     assert(size_log2 == 2);
@@ -307,7 +310,7 @@ static void plic_write(void *opaque, uint32_t offset, uint32_t val,
 
 static void plic_set_irq(void *opaque, int irq_num, int state)
 {
-    printf("plic_set_irq: irq_num=%d, state=%d\n", irq_num, state);////
+    _info("plic_set_irq: irq_num=%d, state=%d\n", irq_num, state);////
     RISCVMachine *s = opaque;
     uint32_t mask;
 
