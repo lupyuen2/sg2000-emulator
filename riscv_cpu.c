@@ -33,8 +33,8 @@
 #include "iomem.h"
 #include "riscv_cpu.h"
 
-#define _info(...) {} ////
-// #define _info printf ////
+// #define _info(...) {} ////
+#define _info printf ////
 
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
@@ -1161,21 +1161,16 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     }
 #endif
 
-    //// Begin Test: Emulate OpenSBI for System Timer
+    //// Begin Test: Emulate Patched Instructions and OpenSBI for System Timer
     if (cause == CAUSE_SUPERVISOR_ECALL) {
-        _info("TODO: Emulate OpenSBI for System Timer\n");
-
-        _info("Before: reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
-        _info("Before: reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
-        _info("Before: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
-        _info("Before: reg %s=%p\n", reg_name[11], s->reg[11]); //// A1 is X11 (parm1)
-        _info("Before: reg %s=%p\n", reg_name[12], s->reg[12]); //// A2 is X12 (parm2)
-        _info("Before: reg %s=%p\n", reg_name[13], s->reg[13]); //// A3 is X13 (parm3)
 
         if (s->pc == ecall_addr) {
             // For OpenSBI Set Timer: Clear the pending timer interrupt bit
             // https://github.com/riscv-non-isa/riscv-sbi-doc/blob/v1.0.0/riscv-sbi.adoc#61-function-set-timer-fid-0
             _info("Set Timer\n");
+            _info("  reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
+            _info("  reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
+            _info("  reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
             riscv_cpu_reset_mip(s, MIP_STIP);
 
         } else if (s->pc == rdtime_addr) {
@@ -1184,7 +1179,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
             _info("Get Time\n");
             static uint64_t t = 0;
             s->reg[10] = t++;  // Not too much or usleep will hang
-            _info("After: reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
+            _info("  Return reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
         }
 
         s->pc += 4;  // Jump to the next instruction (ret)
