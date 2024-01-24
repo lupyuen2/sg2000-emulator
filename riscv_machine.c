@@ -83,10 +83,14 @@ typedef struct RISCVMachine {
 #define RTC_FREQ_DIV 16 /* arbitrary, relative to CPU freq to have a
                            10 MHz frequency */
 
+void set_timecmp(RISCVMachine *machine0, uint64_t timecmp);
+void print_console(RISCVMachine *machine0, const char *buf, int len);
+
 uint64_t ecall_addr = 0;
 uint64_t rdtime_addr = 0;
 uint64_t dcache_iall_addr = 0;
 uint64_t sync_s_addr = 0;
+uint64_t real_time = 0;
 
 static uint64_t rtc_get_real_time(RISCVMachine *s)
 {
@@ -1042,7 +1046,6 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
     if (p->console) {
         //// Begin Test: Save the Console
         const char *msg = "TinyEMU Emulator for Ox64 BL808 RISC-V SBC\r\n";
-        void print_console(RISCVMachine *machine0, const char *buf, int len);
         print_console(s, msg, strlen(msg));
         //// End Test
         vbus->irq = &s->plic_irq[irq_num];
@@ -1131,6 +1134,7 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
               p->cmdline,
               p->files[VM_FILE_INITRD].buf, p->files[VM_FILE_INITRD].len);
     
+    set_timecmp(s, 0); //// Init the System Timer
     return (VirtMachine *)s;
 }
 
@@ -1167,10 +1171,16 @@ static int riscv_machine_get_sleep_duration(VirtMachine *s1, int delay)
         delay = 0;
 
     //// Begin Test: Trigger the Supervisor-Mode Timer Interrupt
-    static uint64_t t = 0;
-    if (t++ % 100 == 0) {
-        riscv_cpu_set_mip(s, MIP_STIP);
-    } ////
+    real_time = rtc_get_time(m);
+    if (!(riscv_cpu_get_mip(s) & MIP_STIP)) {
+        const int64_t delay2 = m->timecmp - rtc_get_time(m);
+        if (delay2 <= 0) {
+            static uint64_t t = 0;
+            if (t++ % 100 == 0) {
+                riscv_cpu_set_mip(s, MIP_STIP);
+            }
+        }
+    }
     //// End Test
     return delay;
 }
@@ -1216,7 +1226,17 @@ const VirtMachineClass riscv_machine_class = {
     riscv_vm_send_key_event,
 };
 
-//// Begin Test: Print to Console
+//// Begin Test
+// Set Timer
+void set_timecmp(RISCVMachine *machine0, uint64_t timecmp) {
+    static RISCVMachine *machine = NULL;
+    if (machine0 != NULL) { machine = machine0; return; }
+    if (machine == NULL) { puts("set_timecmp: machine is null"); return; }
+    machine->timecmp = timecmp;
+    printf("set_timecmp: timecmp=%p\n", timecmp);
+}
+
+// Print to Console
 void print_console(RISCVMachine *machine0, const char *buf, int len) {
     static RISCVMachine *machine = NULL;
     if (machine0 != NULL) { machine = machine0; }

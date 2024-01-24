@@ -33,8 +33,8 @@
 #include "iomem.h"
 #include "riscv_cpu.h"
 
-// #define _info(...) {} ////
-#define _info printf ////
+#define _info(...) {} ////
+// #define _info printf ////
 
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
@@ -58,6 +58,7 @@ extern uint64_t ecall_addr;
 extern uint64_t rdtime_addr;
 extern uint64_t dcache_iall_addr;
 extern uint64_t sync_s_addr;
+extern uint64_t real_time;
 
 #if FLEN > 0
 #include "softfp.h"
@@ -1173,12 +1174,19 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
             _info("  reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
             riscv_cpu_reset_mip(s, MIP_STIP);
 
+            // If parm0 is not -1, set the System Timer (timecmp)
+            uint64_t timecmp = s->reg[10];  // A0 is X10 (parm0)
+            if (timecmp != (uint64_t) -1) {
+                void set_timecmp(void *machine0, uint64_t timecmp);
+                set_timecmp(NULL, timecmp);
+            }
         } else if (s->pc == rdtime_addr) {
             // For RDTIME: Return the time
             // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
             _info("Get Time\n");
-            static uint64_t t = 0;
-            s->reg[10] = t++;  // Not too much or usleep will hang
+            // static uint64_t t = 0;
+            // s->reg[10] = t++;  // Not too much or usleep will hang
+            s->reg[10] = real_time;
             _info("  Return reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
         }
 
