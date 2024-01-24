@@ -47,7 +47,7 @@ void print_console(void *machine0, const char *buf, int len);
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
 #define DUMP_EXCEPTIONS
-//#define DUMP_CSR
+// #define DUMP_CSR
 #define CONFIG_LOGFILE
  
 #include "riscv_cpu_priv.h"
@@ -374,13 +374,44 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
             s->pending_exception = CAUSE_LOAD_PAGE_FAULT;
             return -1;
         }
+
+        //// Ignore the Upper Bits due to T-Head MMU Flags
+        paddr &= 0xfffffffffffful; ////
+
         pr = get_phys_mem_range(s->mem_map, paddr);
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
-            switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX read from 0x4000000030002084?
-            case 0x30002084:     // uart_fifo_config_1: Is UART Ready?
-                ret = 32; break; // UART TX is always ready, default TX FIFO Available is 32
+            switch(paddr) {
+            case 0x30002084: { // uart_fifo_config_1: Is UART Ready?
+                char read_input(void);
+                uint8_t rx_avail = (read_input() == 0)  // Check input buffer
+                    ? 0   // No input available
+                    : 1;  // One char available
+                ret = 32  // UART TX is always ready, default TX FIFO Available is 32
+                    | (rx_avail << 8);  // UART RX FIFO Available depends on input buffer
+                break;
+            }
 
+            // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
+            case 0x30002020:
+                puts("read BL808_UART_INT_STS");
+                ret = (1 << 1); break;
+
+            // Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
+            case 0x30002024:
+                puts("read BL808_UART_INT_MASK");
+                ret = 0; break;
+
+            // Console Input: BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char
+            case 0x3000208c: {
+                char read_input(void);
+                ret = read_input();
+
+                // Clear the Input Buffer
+                void set_input(char ch);
+                set_input(0);
+                break;
+            }
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_read_slow: invalid physical address 0x");
@@ -469,15 +500,26 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
             s->pending_exception = CAUSE_STORE_PAGE_FAULT;
             return -1;
         }
+
+        //// Ignore the Upper Bits due to T-Head MMU Flags
+        paddr &= 0xfffffffffffful; ////
+
         pr = get_phys_mem_range(s->mem_map, paddr);
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
-            switch(paddr & 0xfffffffffffful) {  // TODO: Why does NuttX write to 0x4000000030002088?
+            switch(paddr) {
             case 0x30002088: { // uart_fifo_wdata: UART Output
                 // Print the character
                 char buf[1];
                 buf[0] = val;
                 print_console(NULL, buf, 1);
+                break;
+            }
+            // Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
+            case 0x30002028: {
+                printf("write BL808_UART_INT_CLEAR: 0x%x\n", val);
+                void virtio_ack_irq(void *device0);
+                virtio_ack_irq(NULL);
                 break;
             }
             default:  // Unknown Memory-Mapped I/O
@@ -1087,7 +1129,8 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 #ifdef DUMP_EXCEPTIONS
         flag = 1;
         flag = (cause & CAUSE_INTERRUPT) == 0;
-        if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
+        //// Previously: if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_ILLEGAL_INSTRUCTION)
+        if (cause == CAUSE_SUPERVISOR_ECALL || cause == CAUSE_USER_ECALL) ////
             flag = 0;
 #endif
         if (flag) {
@@ -1103,6 +1146,14 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     }
 #endif
 
+    //// Begin Test: Emulate OpenSBI for System Timer
+    if (cause == CAUSE_SUPERVISOR_ECALL) {
+        puts("TODO: Emulate OpenSBI for System Timer");
+        s->pc += 4;  // Jump to the next instruction (ret)
+        return; 
+    }
+    //// End Test
+
     if (s->priv <= PRV_S) {
         /* delegate the exception to the supervisor priviledge */
         if (cause & CAUSE_INTERRUPT)
@@ -1116,7 +1167,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
     causel = cause & 0x7fffffff;
     if (cause & CAUSE_INTERRUPT)
         causel |= (target_ulong)1 << (s->cur_xlen - 1);
-    
+
     if (deleg) {
         s->scause = causel;
         s->sepc = s->pc;
@@ -1148,6 +1199,9 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
     printf("raise_exception: cause=%d\n", cause);////
+    #ifndef EMSCRIPTEN ////
+    // printf("raise_exception: sleep\n"); sleep(4);////
+    #endif  //// EMSCRIPTEN
     raise_exception2(s, cause, 0);
 }
 

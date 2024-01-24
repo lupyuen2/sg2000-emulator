@@ -71,7 +71,7 @@ typedef struct RISCVMachine {
 #define DEFAULT_HTIF_BASE_ADDR 0x40008000
 #define VIRTIO_BASE_ADDR 0x40010000
 #define VIRTIO_SIZE      0x1000
-#define VIRTIO_IRQ       1
+#define VIRTIO_IRQ       20  // UART3 IRQ
 #define PLIC_BASE_ADDR 0xe0000000ul
 #define PLIC_SIZE      0x00400000
 #define FRAMEBUFFER_BASE_ADDR 0x41000000
@@ -867,7 +867,62 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
     q[1] = 0x597; /* auipc a1, dtb */
     q[2] = 0x58593 + ((fdt_addr - 4) << 20); /* addi a1, a1, dtb */
     q[3] = 0xf1402573; /* csrr a0, mhartid */
-    q[4] = 0x00028067; /* jalr zero, t0, jump_addr */
+
+    //// Previously: Jump to RAM_BASE_ADDR in Machine Mode
+    // q[4] = 0x00028067; /* jalr zero, t0, jump_addr */
+
+    //// Begin Test: Start in Supervisor Mode
+    uint32_t pc = 4;
+
+    // Set exception and interrupt delegation for S-mode
+    // WRITE_CSR(medeleg, 0xffff);
+    q[pc++] = 0x000167c1;  // lui a5, 0x10 ; nop
+    q[pc++] = 0x000137fd;  // addiw a5, a5, -1 ; nop
+    q[pc++] = 0x30279073;  // csrw medeleg, a5
+
+    // WRITE_CSR(mideleg, 0xffff);
+    q[pc++] = 0x30379073;  // csrw mideleg, a5
+
+    // TODO: Follow the OpenSBI Settings for Ox64
+    // Boot HART MIDELEG         : 0x0000000000000222
+    // Boot HART MEDELEG         : 0x000000000000b109
+
+    // Set mstatus to S-mode and enable SUM
+    // CLEAR_CSR(mstatus, ~MSTATUS_MPP_MASK);
+    q[pc++] = 0x000177f9;  // lui a5, 0xffffe ; nop
+    q[pc++] = 0x7ff7879b;  // addiw a5, a5, 2047
+    q[pc++] = 0x3007b073;  // csrc mstatus, a5
+
+    // SET_CSR(mstatus, MSTATUS_MPPS | SSTATUS_SUM);
+    q[pc++] = 0x000417b7;  // lui a5, 0x41
+    q[pc++] = 0x8007879b;  // addiw a5, a5, -2048
+    q[pc++] = 0x3007a073;  // csrs mstatus, a5
+
+    // Jump to RAM_BASE_ADDR in Supervisor Mode
+    q[pc++] = 0x34129073;  // csrw mepc, t0
+    q[pc++] = 0x30200073;  // mret
+
+    // Sentinel to catch overrun
+    q[pc++] = 0x12345678;
+
+    // Machine Mode ECALL: Always return
+    // *(uint32_t *)(ram_ptr + 0x0) = 0x30200073;  // mret
+
+    // Patch the RDTTIME (Read System Timer) with NOP for now. We will support later.
+    uint8_t *kernel_ptr = get_ram_ptr(s, RAM_BASE_ADDR, TRUE);
+    for (int i = 0; i < 0x10000; i++) {
+        // Patch RDTTIME to NOP
+        // c0102573 rdtime a0
+        const uint8_t search[]  = { 0x73, 0x25, 0x10, 0xc0 };
+        // 00010001 nop ; nop
+        const uint8_t replace[] = { 0x01, 0x00, 0x01, 0x00 };
+
+        if (memcmp(&kernel_ptr[i], search,  sizeof(search)) == 0) {
+            memcpy(&kernel_ptr[i], replace, sizeof(replace));
+            printf("Patched RDTTIME (Read System Timer) at %p\n", RAM_BASE_ADDR + i);
+        }
+    }
+    //// End Test
 }
 
 static void riscv_flush_tlb_write_range(void *opaque, uint8_t *ram_addr,

@@ -159,6 +159,9 @@ static uint32_t virtio_pci_read(void *opaque, uint32_t offset, int size_log2);
 static void virtio_pci_write(void *opaque, uint32_t offset,
                              uint32_t val, int size_log2);
 
+void virtio_ack_irq(VIRTIODevice *device0);
+void set_input(char ch);
+
 static void virtio_reset(VIRTIODevice *s)
 {
     int i;
@@ -293,6 +296,7 @@ static void virtio_init(VIRTIODevice *s, VIRTIOBusDef *bus,
     s->config_space_size = config_space_size;
     s->device_recv = device_recv;
     virtio_reset(s);
+    virtio_ack_irq(s); ////
 }
 
 static uint16_t virtio_read16(VIRTIODevice *s, virtio_phys_addr_t addr)
@@ -1269,7 +1273,9 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
                                        int desc_idx, int read_size,
                                        int write_size)
 {
-    puts("virtio_console_recv_request");////
+    //// TODO: Handle virtio_console_recv_request
+    puts("TODO: virtio_console_recv_request");////
+#ifdef NOTUSED
     VIRTIOConsoleDevice *s1 = (VIRTIOConsoleDevice *)s;
     CharacterDevice *cs = s1->cs;
     uint8_t *buf;
@@ -1282,11 +1288,15 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
         free(buf);
         virtio_consume_desc(s, queue_idx, desc_idx, 0);
     }
+#endif  // NOTUSED
     return 0;
 }
 
 BOOL virtio_console_can_write_data(VIRTIODevice *s)
 {
+    //// Normally virtio_console_can_write_data is false until VM Guest connects to VirtIO.
+    return 1; //// Now we always allow write data.
+#ifdef NOTUSED
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
@@ -1295,11 +1305,15 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
         return FALSE;
     avail_idx = virtio_read16(s, qs->avail_addr + 2);
     return qs->last_avail_idx != avail_idx;
+#endif  // NOTUSED
 }
 
 int virtio_console_get_write_len(VIRTIODevice *s)
 {
-    puts("virtio_console_get_write_len");////
+    //// Normally virtio_console_get_write_len returns 0 until VM Guest connects to VirtIO.
+    return 32; //// Now we're always ready for writes.
+#ifdef NOTUSED
+    //puts("virtio_console_get_write_len");////
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
     int desc_idx;
@@ -1316,10 +1330,19 @@ int virtio_console_get_write_len(VIRTIODevice *s)
     if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))
         return 0;
     return write_size;
+#endif  // NOTUSED
 }
 
 int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
 {
+    //// To handle a keypress, we trigger the UART3 Interrupt.
+    //// Pass the keypress to VM Guest
+    printf("[%c]\n", buf[0]); ////
+    set_input(buf[0]);
+    s->int_status |= 1;
+    set_irq(s->irq, 1);
+
+#ifdef NOTUSED
     int queue_idx = 0;
     QueueState *qs = &s->queue[queue_idx];
     int desc_idx;
@@ -1339,6 +1362,7 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     qs->last_avail_idx++;
     printf("virtio_console_write_data: buf[0]=%c, buf_len=%d\n", buf[0], buf_len);////
     return buf_len;
+#endif  // NOTUSED
 }
 
 /* send a resize event */
@@ -1349,7 +1373,8 @@ void virtio_console_resize_event(VIRTIODevice *s, int width, int height)
     put_le16(s->config_space + 0, width);
     put_le16(s->config_space + 2, height);
 
-    virtio_config_change_notify(s);
+    //// Disable Console Resize event because it crashes VM Guest at startup
+    //// Previously: virtio_config_change_notify(s);
 }
 
 VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs)
@@ -2656,3 +2681,27 @@ VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
     return (VIRTIODevice *)s;
 }
 
+//// Begin Test: Acknowledge VirtIO Interrupt
+void virtio_ack_irq(VIRTIODevice *device0) {
+    static VIRTIODevice *device = NULL;
+    if (device0 != NULL) { device = device0; return; }
+    if (device == NULL) { puts("virtio_ack_irq: Missing device"); }
+
+    puts("virtio_ack_irq");
+    // device->int_status &= ~val;
+    // if (device->int_status == 0) {
+        set_irq(device->irq, 0);
+    // }
+}
+
+//// Remember and return the Input Char
+static char input_char = 0;
+
+void set_input(char ch) {
+    input_char = ch;    
+}
+
+char read_input(void) {
+    return input_char;
+}
+//// End Test
