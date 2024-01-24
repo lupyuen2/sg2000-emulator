@@ -35,7 +35,28 @@ nsh>
 
 [Patch DCACHE.IALL and SYNC.S to become ECALL](https://github.com/lupyuen/ox64-tinyemu/commit/b8671f76414747b6902a7dcb89f6fc3c8184075f)
 
-TODO: Test `ostest`
+[Handle System Timer with mtimecmp](https://github.com/lupyuen/ox64-tinyemu/commit/f00d40c0de3d97e93844626c0edfd3b19e8252db)
+
+Test `ostest`...
+
+```text
+semtimed_test: Starting poster thread
+semtimed_test: Set thread 1 priority to 191
+semtimed_test: Starting poster thread 3
+semtimed_test: Set thread 3 priority to 64
+semtimed_test: Waiting for two second timeout
+poster_func: Waiting for 1 second
+semtimed_test: ERROR: sem_timedwait failed with: 110
+_assert: Current Version: NuttX  12.4.0-RC0 55ec92e181 Jan 24 2024 00:11:51 risc
+-v
+_assert: Assertion failed (_Bool)0: at file: semtimed.c:240 task: ostest process
+: ostest 0x8000004a
+up_dump_register: EPC: 0000000050202008
+```
+
+[Remove the Timer Interrupt Interval because ostest will fail](https://github.com/lupyuen/ox64-tinyemu/commit/169dd727a5e06bdc95ac3f32e1f1b119c3cbbb75)
+
+`ostest` is OK yay!
 
 # Emulate BL808 GPIO to Blink an LED
 
