@@ -6,7 +6,9 @@
 
 # Emulate Ox64 BL808 SBC in the Web Browser with TinyEMU RISC-V Emulator
 
-Read the article...
+Read the articles...
+
+-   ["Automated Testing with Ox64 BL808 Emulator (Apache NuttX RTOS)"](https://lupyuen.github.io/articles/tinyemu3)
 
 -   ["Emulate Ox64 BL808 in the Web Browser: Experiments with TinyEMU RISC-V Emulator and Apache NuttX RTOS"](https://lupyuen.github.io/articles/tinyemu2)
 
