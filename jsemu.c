@@ -181,8 +181,13 @@ static void init_vm_fs(void *arg);
 static void init_vm_drive(void *arg);
 
 void vm_start(const char *url, int ram_size, const char *cmdline,
-              const char *pwd, int width, int height, BOOL has_network)
+              const char *pwd, int width, int height, BOOL has_network,
+              const char *drive_url, const char *elf_data)
 {
+    //// Begin Test
+    printf("elf_data=%s\n", elf_data);
+    //// End Test
+
     VMStartState *s;
 
     s = mallocz(sizeof(*s));
