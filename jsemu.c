@@ -182,7 +182,7 @@ static void init_vm_drive(void *arg);
 
 void vm_start(const char *url, int ram_size, const char *cmdline,
               const char *pwd, int width, int height, BOOL has_network,
-              const char *drive_url, const char *elf_data, int elf_len)
+              const char *drive_url, uint8_t *elf_data, int elf_len)
 {
     //// Begin Test
     printf("elf_len=%d\n", elf_len);
