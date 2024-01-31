@@ -43,7 +43,8 @@
 #define _info(...) {} ////
 // #define _info printf ////
 
-uint8_t elf_data[] = { ////
+#ifndef NOTUSED
+uint8_t elf_data2[] = { ////
  0x7F, 0x45, 0x4C, 0x46, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x01, 0x00, 0xF3, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -113,6 +114,8 @@ uint8_t elf_data[] = { ////
  0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 }; ////
+const int elf_len2 = sizeof(elf_data2); //// TODO
+#endif  // NOTUSED
 
 /* RISCV machine */
 
@@ -162,6 +165,8 @@ uint64_t rdtime_addr = 0;
 uint64_t dcache_iall_addr = 0;
 uint64_t sync_s_addr = 0;
 uint64_t real_time = 0;
+uint8_t elf_data[4096];
+int elf_len = 0;
 
 static uint64_t rtc_get_real_time(RISCVMachine *s)
 {
@@ -1027,20 +1032,30 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
         }
     }
 
-    // Patch the ELF Data to a.out
+    // Patch the ELF Data to a.out in Initial RAM Disk
     uint64_t elf_addr = 0;
-    const int elf_len = sizeof(elf_data); //// TODO
     printf("elf_len=%d\n", elf_len);
-    for (int i = 0; i < 0xD61680; i++) { //// TODO: Fix the Image Size
-        const uint8_t pattern[] = { 0x22, 0x05, 0x69, 0x00 };
-        if (memcmp(&kernel_ptr[i], pattern, sizeof(pattern)) == 0) {
-            memcpy(&kernel_ptr[i], elf_data, elf_len);
-            elf_addr = RAM_BASE_ADDR + i;
-            printf("Patched ELF Data to a.out at %p\n", elf_addr);
-            break;
+    for (int i = 0; i < elf_len; i++) {
+        printf("elf_data[%d]=0x%x\n", i, elf_data[i]);
+        if (elf_data[i] != elf_data2[i]) {
+            printf("*** elf_data2[%d]=0x%x\n", i, elf_data2[i]);
         }
     }
-    if (elf_addr == 0) { puts("*** ERROR: Pattern for ELF Data a.out is missing"); }
+    if (elf_len > 0) {
+        printf("memcmp=%d\n", memcmp(elf_data, elf_data2, elf_len)); ////
+        //// TODO: Fix the Image Size
+        for (int i = 0; i < 0xD61680; i++) {
+            const uint8_t pattern[] = { 0x22, 0x05, 0x69, 0x00 };
+            if (memcmp(&kernel_ptr[i], pattern, sizeof(pattern)) == 0) {
+                //// TODO: Catch overflow of a.out
+                memcpy(&kernel_ptr[i], elf_data, elf_len);
+                elf_addr = RAM_BASE_ADDR + i;
+                printf("Patched ELF Data to a.out at %p\n", elf_addr);
+                break;
+            }
+        }
+        if (elf_addr == 0) { puts("*** ERROR: Pattern for ELF Data a.out is missing"); }
+    }
     //// End Test
 }
 
