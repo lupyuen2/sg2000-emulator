@@ -185,10 +185,11 @@ void vm_start(const char *url, int ram_size, const char *cmdline,
               const char *drive_url, uint8_t *elf_data0, int elf_len0)
 {
     //// Begin Test: Patch the ELF Data to a.out in Initial RAM Disk
-    extern uint8_t elf_data[];
+    extern uint8_t elf_data[];  // From riscv_machine.c
     extern int elf_len;
     elf_len = elf_len0;
 
+    // Must copy ELF Data to Local Buffer because it will get overwritten
     printf("elf_len=%d\n", elf_len);
     if (elf_len > 4096) { puts("*** ERROR: elf_len exceeds 4096, increase elf_data and a.out size"); }
     memcpy(elf_data, elf_data0, elf_len);
