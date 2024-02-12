@@ -530,6 +530,18 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
                 virtio_ack_irq(NULL);
                 break;
             }
+            // GPIO Output: Send an Emulator Notification to the Console: {"nuttxemu":{"gpio29":1}}
+            case 0x20000938: {  // GPIO 29
+                // Check if the Output Bit is Off or On
+                #define reg_gpio_xx_o 24
+                #define reg_gpio_xx_i 28
+                const char b =
+                    ((val & (1 << reg_gpio_xx_o)) == 0)
+                    ? '0' : '1';
+                char notify[] = "{\"nuttxemu\":{\"gpio29\":0}}";
+                notify[strlen(notify) - 3] = b;
+                print_console(NULL, notify, strlen(notify));
+            }
             default:  // Unknown Memory-Mapped I/O
 #ifdef DUMP_INVALID_MEM_ACCESS
                 printf("target_write_slow: invalid physical address 0x");
