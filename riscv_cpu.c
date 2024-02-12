@@ -538,8 +538,8 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
                 const char b =
                     ((val & (1 << reg_gpio_xx_o)) == 0)
                     ? '0' : '1';
-                char notify[] = "{\"nuttxemu\":{\"gpio29\":0}}\n";
-                notify[strlen(notify) - 4] = b;
+                char notify[] = "{\"nuttxemu\":{\"gpio29\":0}}\r\n";
+                notify[strlen(notify) - 5] = b;
                 print_console(NULL, notify, strlen(notify));
             }
             default:  // Unknown Memory-Mapped I/O
