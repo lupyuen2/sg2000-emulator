@@ -44,13 +44,13 @@
 #endif
 
 // #define DUMP_INVALID_MEM_ACCESS
-#define DUMP_MMU_EXCEPTIONS
+#define DUMP_MMU_EXCEPTIONS //// On-Demand Paging (riscv_fillpage) will trigger Store/AMO Page Fault (MCAUSE 15)
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
-#define DUMP_EXCEPTIONS
+#define DUMP_EXCEPTIONS //// On-Demand Paging (riscv_fillpage) will trigger Store/AMO Page Fault (MCAUSE 15)
 // #define DUMP_CSR
 #define CONFIG_LOGFILE
- 
+
 #include "riscv_cpu_priv.h"
 
 void print_console(void *machine0, const char *buf, int len); ////
@@ -1169,6 +1169,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
             print_target_ulong(tval);
 #endif
             log_printf("\n");
+            printf("raise_exception2: cause=%d, tval=%p, pc=%p\n", cause, (void *)tval, s->pc);////
             dump_regs(s);
         }
     }
