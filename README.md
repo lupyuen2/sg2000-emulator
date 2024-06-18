@@ -1,26 +1,32 @@
-![Ox64 BL808 Emulator with TinyEMU RISC-V Emulator and Apache NuttX RTOS](https://lupyuen.github.io/images/tinyemu2-title.png)
+# Emulate Sophgo SG2000 SoC / Milk-V Duo S SBC with TinyEMU RISC-V Emulator
 
-[_(Live Demo of Ox64 BL808 Emulator)_](https://lupyuen.github.io/nuttx-tinyemu/timer)
+TODO
 
-[_(Watch the Demo on YouTube)_](https://youtu.be/FAxaMt6A59I)
+[Update RAM Base Addr, CLINT Addr, PLIC Addr](https://github.com/lupyuen2/sg2000-emulator/commit/d36190c63c1db116a206a26f3bc27dfacf5c8298)
 
-# Emulate Ox64 BL808 SBC in the Web Browser with TinyEMU RISC-V Emulator
-
-Read the articles...
-
--   ["Too many Embedded Logs? PureScript might help (Ox64 BL808 SBC / Apache NuttX RTOS)"](https://lupyuen.github.io/articles/purescript)
-
--   ["(Homage to MakeCode) Coding Ox64 BL808 SBC the Drag-n-Drop Way"](https://lupyuen.github.io/articles/quickjs2)
-
--   ["QuickJS JavaScript Engine on a Real-Time Operating System (Apache NuttX RTOS)"](https://lupyuen.github.io/articles/quickjs)
-
--   ["Zig runs ROM FS Filesystem in the Web Browser (thanks to Apache NuttX RTOS)"](https://lupyuen.github.io/articles/romfs)
-
--   ["TCC RISC-V Compiler runs in the Web Browser (thanks to Zig Compiler)"](https://lupyuen.github.io/articles/tcc)
-
--   ["Automated Testing with Ox64 BL808 Emulator (Apache NuttX RTOS)"](https://lupyuen.github.io/articles/tinyemu3)
-
--   ["Emulate Ox64 BL808 in the Web Browser: Experiments with TinyEMU RISC-V Emulator and Apache NuttX RTOS"](https://lupyuen.github.io/articles/tinyemu2)
+```bash
+spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
+TinyEMU Emulator for Sophgo SG2000 SoC
+virtio_console_init
+Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
+Patched SYNC.S (Ensure that all Cache Operations are completed) at 0x80200a2c
+Found ECALL (Start System Timer) at 0x8020b2c6
+Patched RDTIME (Read System Time) at 0x8020b2cc
+elf_len=0
+virtio_console_resize_event
+raise_exception2: cause=1, tval=0xffffffff80200000, pc=0xffffffff80200000
+pc =ffffffff80200000 ra =0000000000000000 sp =0000000000000000 gp =0000000000000000
+tp =0000000000000000 t0 =ffffffff80200000 t1 =0000000000000000 t2 =0000000000000000
+s0 =0000000000000000 s1 =0000000000000000 a0 =0000000000000000 a1 =0000000000001040
+a2 =0000000000000000 a3 =0000000000000000 a4 =0000000000000000 a5 =0000000000040800
+a6 =0000000000000000 a7 =0000000000000000 s2 =0000000000000000 s3 =0000000000000000
+s4 =0000000000000000 s5 =0000000000000000 s6 =0000000000000000 s7 =0000000000000000
+s8 =0000000000000000 s9 =0000000000000000 s10=0000000000000000 s11=0000000000000000
+t3 =0000000000000000 t4 =0000000000000000 t5 =0000000000000000 t6 =0000000000000000
+priv=S mstatus=0000000a00040080 cycles=19
+ mideleg=0000000000000222 mie=0000000000000000 mip=00000000000000a0
+tinyemu: Illegal instruction, quitting: pc=0x0, instruction=0x0
+```
 
 # TinyEMU
 
