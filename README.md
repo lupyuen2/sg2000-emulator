@@ -100,7 +100,8 @@ We fix the UART Output Registers: [Update UART Output Register and UART Status R
 Now we see NSH Shell yay!
 
 ```bash
-spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
+$ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+...
 TinyEMU Emulator for Sophgo SG2000 SoC
 virtio_console_init
 Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
@@ -114,15 +115,72 @@ NuttShell (NSH) NuttX-12.5.1
 nsh>
 ```
 
-TODO: Fix UART Input and UART Interrupt
+When we press a key, NuttX triggers an expected interrupt...
 
 ```bash
+$ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+...
 NuttShell (NSH) NuttX-12.5.1
 nsh> irq_unexpected_isr: ERROR irq: 45
 _assert: Current Version: NuttX  12.5.1 218ccd843a Jun 18 2024 22:14:46 risc-v
 _assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_Task process: Kernel 0x8020110c
 up_dump_register: EPC: 000000008021432a
 ```
+
+TODO: Fix UART Input and UART Interrupt
+
+```bash
+CONFIG_16550_UART0_IRQ=69
+```
+
+NuttX IRQ Offset is 25, so Actual RISC-V IRQ is 69 - 25 = 44
+
+```c
+#define VIRTIO_IRQ       44  // UART0 IRQ
+```
+
+TinyEMU crashes when we press a key...
+
+```bash
+$ lldb $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+(lldb) target create "/Users/luppy/sg2000/sg2000-emulator/temu"
+Current executable set to '/Users/luppy/sg2000/sg2000-emulator/temu' (arm64).
+(lldb) settings set -- target.run-args  "root-riscv64.cfg"
+(lldb) r
+Process 90245 launched: '/Users/luppy/sg2000/sg2000-emulator/temu' (arm64)
+TinyEMU Emulator for Sophgo SG2000 SoC
+virtio_console_init
+Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
+Patched SYNC.S (Ensure that all Cache Operations are completed) at 0x80200a2c
+Found ECALL (Start System Timer) at 0x8020b2c6
+Patched RDTIME (Read System Time) at 0x8020b2cc
+elf_len=0
+virtio_console_resize_event
+ABC
+NuttShell (NSH) NuttX-12.5.1
+Process 90245 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+    frame #0: 0x0000000000000000
+error: memory read failed for 0x0
+Target 0: (temu) stopped.
+(lldb) bt
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+  * frame #0: 0x0000000000000000
+    frame #1: 0x000000010000b978 temu`virt_machine_run(m=0x000000013461b2a0) at temu.c:598:17 [opt]
+    frame #2: 0x000000010000be6c temu`main(argc=<unavailable>, argv=<unavailable>) at temu.c:845:9 [opt]
+    frame #3: 0x0000000197a4e0e0 dyld`start + 2360
+(lldb) 
+```
+
+Which is at...
+
+```c
+void virt_machine_run(VirtMachine *m) {
+  ...    
+  virtio_console_write_data(m->console_dev, buf, ret);
+```
+
+TODO: Why?
 
 # TinyEMU
 
