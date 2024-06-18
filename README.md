@@ -68,6 +68,8 @@ li  t0, 0x80200000
 
 We copy this into our TinyEMU Boot Code...
 
+[Change auipc t0, 0x80200000 to li t0, 0x80200000](https://github.com/lupyuen2/sg2000-emulator/commit/b2d5cf63c5d6d1d0d4eafa5d400216d1f76a6e21)
+
 ```c
 // `li  t0, 0x80200000` gets assembled to:
 // 4010029b addiw t0,zero,1025
@@ -93,7 +95,34 @@ elf_len=0
 virtio_console_resize_event
 ```
 
-TODO: Fix the UART Output
+We fix the UART Output Registers: [Update UART Output Register and UART Status Register](https://github.com/lupyuen2/sg2000-emulator/commit/fd6e5333ef6f89b452901d6e580d8387e9da2573)
+
+Now we see NSH Shell yay!
+
+```bash
+spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
+TinyEMU Emulator for Sophgo SG2000 SoC
+virtio_console_init
+Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
+Patched SYNC.S (Ensure that all Cache Operations are completed) at 0x80200a2c
+Found ECALL (Start System Timer) at 0x8020b2c6
+Patched RDTIME (Read System Time) at 0x8020b2cc
+elf_len=0
+virtio_console_resize_event
+ABC
+NuttShell (NSH) NuttX-12.5.1
+nsh>
+```
+
+TODO: Fix UART Input and UART Interrupt
+
+```bash
+NuttShell (NSH) NuttX-12.5.1
+nsh> irq_unexpected_isr: ERROR irq: 45
+_assert: Current Version: NuttX  12.5.1 218ccd843a Jun 18 2024 22:14:46 risc-v
+_assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_Task process: Kernel 0x8020110c
+up_dump_register: EPC: 000000008021432a
+```
 
 # TinyEMU
 
