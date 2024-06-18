@@ -390,27 +390,32 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
             switch(paddr) {
-            case 0x30002084: { // uart_fifo_config_1: Is UART Ready?
-                char read_input(void);
-                uint8_t rx_avail = (read_input() == 0)  // Check input buffer
-                    ? 0   // No input available
-                    : 1;  // One char available
-                ret = 32  // UART TX is always ready, default TX FIFO Available is 32
-                    | (rx_avail << 8);  // UART RX FIFO Available depends on input buffer
-                break;
-            }
 
-            // Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
+            #define UART0_BASE_ADDR 0x04140000
+            #define CONFIG_16550_REGINCR 4
+            #define UART_THR_INCR 0  /* (DLAB =0) Transmit Holding Register */
+            #define UART_LSR_INCR 5  /* Line Status Register */
+            #define UART_THR_OFFSET (CONFIG_16550_REGINCR*UART_THR_INCR)
+            #define UART_LSR_OFFSET (CONFIG_16550_REGINCR*UART_LSR_INCR)
+            #define UART_LSR_THRE (1 << 5)  /* Bit 5:  Transmitter Holding Register Empty */
+
+            // Console Output: Line Status Register
+            case UART0_BASE_ADDR + UART_LSR_OFFSET:
+                _info("read UART_LSR_OFFSET\n");
+                ret = UART_LSR_THRE;  // Always return Transmit Holding Register is Empty
+                break;
+
+            // TODO: Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
             case 0x30002020:
                 _info("read BL808_UART_INT_STS\n");
                 ret = (1 << 1); break;
 
-            // Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
+            // TODO: Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
             case 0x30002024:
                 _info("read BL808_UART_INT_MASK\n");
                 ret = 0; break;
 
-            // Console Input: BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char
+            // TODO: Console Input: BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char
             case 0x3000208c: {
                 char read_input(void);
                 ret = read_input();
@@ -516,21 +521,24 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
         if (!pr) {
             //// Begin Test: Intercept Memory-Mapped I/O
             switch(paddr) {
-            case 0x30002088: { // uart_fifo_wdata: UART Output
+
+            // Console Output: Transmit Holding Register
+            case UART0_BASE_ADDR + UART_THR_OFFSET: {
                 // Print the character
+                _info("write UART_THR_OFFSET: 0x%x\n", val);
                 char buf[1];
                 buf[0] = val;
                 print_console(NULL, buf, 1);
                 break;
             }
-            // Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
+            // TODO: Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
             case 0x30002028: {
                 _info("write BL808_UART_INT_CLEAR: 0x%x\n", val);
                 void virtio_ack_irq(void *device0);
                 virtio_ack_irq(NULL);
                 break;
             }
-            // GPIO Output: Send an Emulator Notification to the Console: {"nuttxemu":{"gpio29":1}}
+            // TODO: GPIO Output: Send an Emulator Notification to the Console: {"nuttxemu":{"gpio29":1}}
             case 0x20000938: {  // GPIO 29
                 // Check if the Output Bit is Off or On
                 #define reg_gpio_xx_o 24
