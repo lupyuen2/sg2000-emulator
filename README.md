@@ -139,7 +139,16 @@ NuttX IRQ Offset is 25, so Actual RISC-V IRQ is 69 - 25 = 44
 #define VIRTIO_IRQ       44  // UART0 IRQ
 ```
 
-TinyEMU crashes when we press a key...
+When we press a key: TinyEMU crashes with a Segmentation Fault...
+
+```bash
+$ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg    
+...
+NuttShell (NSH) NuttX-12.5.1
+nsh> [1]    94499 segmentation fault  $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg
+```
+
+We debug with `lldb` (because `gdb` is not available for macOS Arm64)...
 
 ```bash
 $ lldb $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
@@ -148,15 +157,7 @@ Current executable set to '/Users/luppy/sg2000/sg2000-emulator/temu' (arm64).
 (lldb) settings set -- target.run-args  "root-riscv64.cfg"
 (lldb) r
 Process 90245 launched: '/Users/luppy/sg2000/sg2000-emulator/temu' (arm64)
-TinyEMU Emulator for Sophgo SG2000 SoC
-virtio_console_init
-Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
-Patched SYNC.S (Ensure that all Cache Operations are completed) at 0x80200a2c
-Found ECALL (Start System Timer) at 0x8020b2c6
-Patched RDTIME (Read System Time) at 0x8020b2cc
-elf_len=0
-virtio_console_resize_event
-ABC
+...
 NuttShell (NSH) NuttX-12.5.1
 Process 90245 stopped
 * thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
@@ -180,7 +181,7 @@ void virt_machine_run(VirtMachine *m) {
   virtio_console_write_data(m->console_dev, buf, ret);
 ```
 
-TODO: Why?
+TODO: Why did TinyEMU crash?
 
 # TinyEMU
 
