@@ -950,17 +950,26 @@ static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
 
     /* jump_addr = RAM_BASE_ADDR */
     
+    uint32_t pc = 0;
     q = (uint32_t *)(ram_ptr + 0x1000);
-    q[0] = 0x297 + RAM_BASE_ADDR - 0x1000; /* auipc t0, jump_addr */
-    q[1] = 0x597; /* auipc a1, dtb */
-    q[2] = 0x58593 + ((fdt_addr - 4) << 20); /* addi a1, a1, dtb */
-    q[3] = 0xf1402573; /* csrr a0, mhartid */
+
+    // `li  t0, 0x80200000` gets assembled to:
+    // 4010029b addiw t0,zero,1025
+    // 01529293 slli  t0,t0,0x15
+    q[pc++] = 0x4010029b; // addiw t0,zero,1025
+    q[pc++] = 0x01529293; // slli  t0,t0,0x15
+
+    // Previously: q[pc++] = 0x297 + RAM_BASE_ADDR - 0x1000; /* auipc t0, jump_addr */
+    // Which fails because RAM_BASE_ADDR is too big for auipc
+
+    q[pc++] = 0x597; /* auipc a1, dtb */
+    q[pc++] = 0x58593 + ((fdt_addr - 4) << 20); /* addi a1, a1, dtb */
+    q[pc++] = 0xf1402573; /* csrr a0, mhartid */
 
     //// Previously: Jump to RAM_BASE_ADDR in Machine Mode
     // q[4] = 0x00028067; /* jalr zero, t0, jump_addr */
 
     //// Begin Test: Start in Supervisor Mode
-    uint32_t pc = 4;
 
     // Set exception and interrupt delegation for S-mode
     // WRITE_CSR(medeleg, 0xffff);

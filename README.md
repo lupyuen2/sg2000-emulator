@@ -28,19 +28,72 @@ priv=S mstatus=0000000a00040080 cycles=19
 tinyemu: Illegal instruction, quitting: pc=0x0, instruction=0x0
 ```
 
-https://riscvasm.lucasteske.dev/#
+0xffffffff80200000 looks sus, it seems related to RAM Base Address 0x80200000. We check the TinyEMU Boot Code...
 
-```text
+```c
+q = (uint32_t *)(ram_ptr + 0x1000);
+q[0] = 0x297 + RAM_BASE_ADDR - 0x1000; /* auipc t0, jump_addr */
+```
+
+Maybe auipc has a problem? We run the RISC-V Online Assembler: https://riscvasm.lucasteske.dev/#
+
+We try to assemble the TinyEMU Boot Code (for loading the RAM Base Address 0x80200000)...
+
+```bash
 auipc t0, 0x80200000
 ```
 
-Produces this error...
+But it produces this error...
 
-```text
+```bash
 file.s: Assembler messages:
 file.s:3: Error: lui expression not in range 0..1048575
 file.s:3: Error: value of 0000080200000000 too large for field of 4 bytes at 0000000000000000
 ```
+
+0x80200000 is too big to assemble into the auipc address!
+
+So we load 0x80200000 into Register t0 in another way
+
+```bash
+li  t0, 0x80200000
+```
+
+[RISC-V Online Assembler](https://riscvasm.lucasteske.dev/#) produces...
+
+```bash
+   0:	4010029b          	addiw	t0,zero,1025
+   4:	01529293          	slli	t0,t0,0x15
+```
+
+We copy this into our TinyEMU Boot Code...
+
+```c
+// `li  t0, 0x80200000` gets assembled to:
+// 4010029b addiw t0,zero,1025
+// 01529293 slli  t0,t0,0x15
+q[pc++] = 0x4010029b; // addiw t0,zero,1025
+q[pc++] = 0x01529293; // slli  t0,t0,0x15
+
+// Previously: q[pc++] = 0x297 + RAM_BASE_ADDR - 0x1000; /* auipc t0, jump_addr */
+// Which fails because RAM_BASE_ADDR is too big for auipc
+```
+
+And it hangs (instead of crashing). Some progress!
+
+```bash
+spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
+TinyEMU Emulator for Sophgo SG2000 SoC
+virtio_console_init
+Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
+Patched SYNC.S (Ensure that all Cache Operations are completed) at 0x80200a2c
+Found ECALL (Start System Timer) at 0x8020b2c6
+Patched RDTIME (Read System Time) at 0x8020b2cc
+elf_len=0
+virtio_console_resize_event
+```
+
+TODO: Fix the UART Output
 
 # TinyEMU
 
