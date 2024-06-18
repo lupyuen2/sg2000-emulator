@@ -28,6 +28,20 @@ priv=S mstatus=0000000a00040080 cycles=19
 tinyemu: Illegal instruction, quitting: pc=0x0, instruction=0x0
 ```
 
+https://riscvasm.lucasteske.dev/#
+
+```text
+auipc t0, 0x80200000
+```
+
+Produces this error...
+
+```text
+file.s: Assembler messages:
+file.s:3: Error: lui expression not in range 0..1048575
+file.s:3: Error: value of 0000080200000000 too large for field of 4 bytes at 0000000000000000
+```
+
 # TinyEMU
 
 [![Build](https://github.com/lupyuen/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
