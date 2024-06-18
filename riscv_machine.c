@@ -1139,7 +1139,7 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
     /* virtio console */
     if (p->console) {
         //// Begin Test: Save the Console
-        const char *msg = "TinyEMU Emulator for Ox64 BL808 RISC-V SBC\r\n";
+        const char *msg = "TinyEMU Emulator for Sophgo SG2000 SoC\r\n";
         print_console(s, msg, strlen(msg));
         //// End Test
         vbus->irq = &s->plic_irq[irq_num];
