@@ -444,14 +444,16 @@ Seems the RISC-V IRQs wrap around at 32? So RISC-V IRQ 44 becomes IRQ 12?
 ```bash
 NuttShell (NSH) NuttX-12.5.1
 nsh> plic_set_irq: irq_num=44, state=1
+plic_pending_irq=0x800, plic_served_irq=0x0, mask=0x800
 plic_update_mip: set_mip, pending=0x800, served=0x0
 plic_read: offset=0x201004
 plic_update_mip: reset_mip, pending=0x800, served=0x800
 plic_read: pending irq=0xc
+plic_pending_irq=0x800, plic_served_irq=0x800, mask=0x800
 irq_unexpected_isr: ERROR irq: 37
 ```
 
-TODO: Increase IRQ Size from 32-bit to 64-bit
+TODO: Increase the Pending IRQ Size and Served IRQ Size from 32-bit to 64-bit
 
 # TinyEMU
 
