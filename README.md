@@ -1,5 +1,9 @@
 # Emulate Sophgo SG2000 SoC / Milk-V Duo S SBC with TinyEMU RISC-V Emulator
 
+Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC!
+
+We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000...
+
 TODO
 
 [Update RAM Base Addr, CLINT Addr, PLIC Addr](https://github.com/lupyuen2/sg2000-emulator/commit/d36190c63c1db116a206a26f3bc27dfacf5c8298)
@@ -215,6 +219,8 @@ static inline void set_irq(IRQSignal *irq, int level) {
   irq->set_irq(irq->opaque, irq->irq_num, level);
 }
 ```
+
+Which means `irq->set_irq` is null!
 
 TODO: Why?
 
