@@ -44,7 +44,7 @@
 #define _info printf ////
 
 //// Maximum number of IRQs
-#define MAX_IRQ 256
+#define MAX_IRQ 64
 
 #ifdef NOTUSED
 uint8_t elf_data2[] = { ////
@@ -133,7 +133,7 @@ typedef struct RISCVMachine {
     uint64_t rtc_start_time;
     uint64_t timecmp;
     /* PLIC */
-    uint32_t plic_pending_irq, plic_served_irq;
+    uint64_t plic_pending_irq, plic_served_irq; //// Increased the IRQs
     IRQSignal plic_irq[MAX_IRQ]; /* IRQ 0 is not used */ //// Increased the IRQs
     /* HTIF */
     uint64_t htif_tohost, htif_fromhost;
@@ -162,6 +162,7 @@ typedef struct RISCVMachine {
 
 void set_timecmp(RISCVMachine *machine0, uint64_t timecmp);
 void print_console(RISCVMachine *machine0, const char *buf, int len);
+static int ctz64(uint64_t val);
 
 uint64_t ecall_addr = 0;
 uint64_t rdtime_addr = 0;
@@ -333,13 +334,13 @@ static void clint_write(void *opaque, uint32_t offset, uint32_t val,
 static void plic_update_mip(RISCVMachine *s)
 {
     RISCVCPUState *cpu = s->cpu_state;
-    uint32_t mask;
+    uint64_t mask; //// Increased the IRQs
     mask = s->plic_pending_irq & ~s->plic_served_irq;
     if (mask) {
-        _info("plic_update_mip: set_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
+        _info("plic_update_mip: set_mip, pending=0x%lx, served=0x%lx\n", s->plic_pending_irq, s->plic_served_irq);////
         riscv_cpu_set_mip(cpu, MIP_MEIP | MIP_SEIP);
     } else {
-        _info("plic_update_mip: reset_mip, pending=0x%x, served=0x%x\n", s->plic_pending_irq, s->plic_served_irq);////
+        _info("plic_update_mip: reset_mip, pending=0x%lx, served=0x%lx\n", s->plic_pending_irq, s->plic_served_irq);////
         riscv_cpu_reset_mip(cpu, MIP_MEIP | MIP_SEIP);
     }
 }
@@ -351,18 +352,18 @@ static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
 {
     _info("plic_read: offset=0x%x\n", offset);////
     RISCVMachine *s = opaque;
-    uint32_t val, mask;
+    uint32_t val;
     int i;
     assert(size_log2 == 2);
     switch(offset) {
     case PLIC_HART_BASE:
         val = 0;
         break;
-    case PLIC_HART_BASE + 4:
-        mask = s->plic_pending_irq & ~s->plic_served_irq;
+    case PLIC_HART_BASE + 4: {
+        uint64_t mask = s->plic_pending_irq & ~s->plic_served_irq; //// Increased the IRQs
         if (mask != 0) {
-            i = ctz32(mask);
-            s->plic_served_irq |= 1 << i;
+            i = ctz64(mask); //// Increased the IRQs
+            s->plic_served_irq |= 1ul << i; //// Increased the IRQs
             plic_update_mip(s);
             val = i + 1;
             _info("plic_read: pending irq=0x%x\n", val);////
@@ -370,6 +371,7 @@ static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
             val = 0;
         }
         break;
+    }
     default:
         val = 0;
         break;
@@ -387,8 +389,8 @@ static void plic_write(void *opaque, uint32_t offset, uint32_t val,
     switch(offset) {
     case PLIC_HART_BASE + 4:
         val--;
-        if (val < 32) {
-            s->plic_served_irq &= ~(1 << val);
+        if (val < MAX_IRQ) { //// Increased the IRQs
+            s->plic_served_irq &= ~(1ul << val); //// Increased the IRQs
             plic_update_mip(s);
         }
         break;
@@ -401,9 +403,9 @@ static void plic_set_irq(void *opaque, int irq_num, int state)
 {
     _info("plic_set_irq: irq_num=%d, state=%d\n", irq_num, state);////
     RISCVMachine *s = opaque;
-    uint32_t mask;
+    uint64_t mask; //// Increased the IRQs
 
-    mask = 1 << (irq_num - 1);
+    mask = 1ul << (irq_num - 1); //// Increased the IRQs
     if (state) 
         s->plic_pending_irq |= mask;
     else
@@ -1349,5 +1351,17 @@ void print_console(RISCVMachine *machine0, const char *buf, int len) {
         machine->common.console->opaque,
         (const uint8_t *)buf, 
         len);
+}
+
+// Count trailing zeros in a 64-bit value. Returns 64 if the value is zero.
+// https://android.googlesource.com/platform/external/qemu/+/master/include/qemu/host-utils.h#202
+static int ctz64(uint64_t val) {
+    int cnt;
+    cnt = 0;
+    if (!((uint32_t)val)) {
+        cnt += 32;
+        val >>= 32;
+    }
+    return cnt + ctz32(val);
 }
 //// End Test
