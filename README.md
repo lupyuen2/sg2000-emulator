@@ -386,7 +386,31 @@ frame #5: 0x0000000100002418 temu`virtio_console_write_data(s=0x0000000142719980
 }
 ```
 
-TODO: Why is `s->irq` empty?
+Why is `s->irq` empty? We step up the Call Stack...
+
+```bash
+(lldb) up
+frame #6: 0x000000010000fc30 temu`virt_machine_run(m=0x0000000142719ff0) at temu.c:598:17
+   595              len = min_int(len, sizeof(buf));
+   596              ret = m->console->read_data(m->console->opaque, buf, len);
+   597              if (ret > 0) {
+-> 598                  virtio_console_write_data(m->console_dev, buf, ret);
+   599              }
+   600          }
+   601  #endif
+(lldb) p *m
+(VirtMachine) {
+  vmc = 0x0000000100080620
+  net = NULL
+  console_dev = 0x0000000142719980
+  console = 0x0000000142719510
+  fb_dev = NULL
+}
+```
+
+`s->irq` comes from `m->console_dev`.
+
+TODO: Why is `console_dev` not properly inited?
 
 # TinyEMU
 
