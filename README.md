@@ -222,6 +222,24 @@ static inline void set_irq(IRQSignal *irq, int level) {
 
 Which means `irq->set_irq` is null!
 
+[irq->set_irq is null!](https://github.com/lupyuen2/sg2000-emulator/commit/4a8652a70ff16b85ab16108686916a75505e4ef6)
+
+```text
+NuttShell (NSH) NuttX-12.5.1
+nsh> Assertion failed: (irq->set_irq != NULL), function set_irq, file iomem.h, line 145.
+Process 15262 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = hit program assert
+    frame #4: 0x000000010000249c temu`set_irq(irq=0x000000014271a478, level=1) at iomem.h:145:5
+   142 
+   143  static inline void set_irq(IRQSignal *irq, int level)
+   144  {
+-> 145      assert(irq->set_irq != NULL); //// TODO
+   146      irq->set_irq(irq->opaque, irq->irq_num, level);
+   147  }
+   148 
+Target 0: (temu) stopped.
+```
+
 TODO: Why?
 
 # TinyEMU
