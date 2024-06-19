@@ -40,8 +40,8 @@
 #include "elf.h"
 #include "compress.h"
 
-#define _info(...) {} ////
-// #define _info printf ////
+// #define _info(...) {} ////
+#define _info printf ////
 
 //// Maximum number of IRQs
 #define MAX_IRQ 256
@@ -365,6 +365,7 @@ static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
             s->plic_served_irq |= 1 << i;
             plic_update_mip(s);
             val = i + 1;
+            _info("plic_read: pending irq=0x%x\n", val);////
         } else {
             val = 0;
         }
@@ -1336,7 +1337,7 @@ void set_timecmp(RISCVMachine *machine0, uint64_t timecmp) {
     if (machine0 != NULL) { machine = machine0; return; }
     if (machine == NULL) { puts("set_timecmp: machine is null"); return; }
     machine->timecmp = timecmp;
-    _info("set_timecmp: timecmp=%p\n", timecmp);
+    // _info("set_timecmp: timecmp=%p\n", timecmp);
 }
 
 // Print to Console
