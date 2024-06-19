@@ -477,7 +477,41 @@ plic_read: pending irq=0x2c
 plic_write: offset=0x201004, val=0x2c
 ```
 
-TODO: Why does Pending IRQ loop forever? Maybe because we haven't cleared the UART Interrupt?
+_Why does Pending IRQ loop forever? Maybe because we haven't cleared the UART Interrupt?_
+
+To find out why, we trace the reads and writes to UART Registers: [Log the invalid memory accesses](https://github.com/lupyuen2/sg2000-emulator/commit/1f4b79bc9d276e1ca6371e60d0c9d25a53f7fa80)
+
+```bash
+NuttShell (NSH) NuttX-12.5.1
+target_write_slow: invalid physical address 0x0000000004140004
+User ECALL: pc=0xc0001998
+target_write_slow: invalid physical address 0x0000000004140004
+target_write_slow: invalid physical address 0x0000000004140004
+nsh> target_write_slow: invalid physical address 0x0000000004140004
+User ECALL: pc=0xc0001998
+target_write_slow: invalid physical address 0x0000000004140004
+target_write_slow: invalid physical address 0x0000000004140004
+target_write_slow: invalid physical address 0x0000000004140004
+User ECALL: pc=0xc000aa0e
+target_write_slow: invalid physical address 0x0000000004140004
+target_write_slow: invalid physical address 0x0000000004140004
+plic_set_irq: irq_num=44, state=1
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+target_read_slow: invalid physical address 0x0000000004140008
+target_read_slow: invalid physical address 0x0000000004140008
+target_read_slow: invalid physical address 0x0000000004140018
+target_read_slow: invalid physical address 0x0000000004140008
+target_read_slow: invalid physical address 0x0000000004140018
+target_read_slow: invalid physical address 0x0000000004140008
+target_read_slow: invalid physical address 0x0000000004140018
+```
+
+TODO: What are UART Registers 0x4140008 and 0x4140018? Why are they read when we press a key?
+
+TODO: What is UART Registers 0x4140004? Why is it read when we print to UART?
 
 # TinyEMU
 
