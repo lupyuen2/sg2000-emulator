@@ -33,8 +33,8 @@
 #include "iomem.h"
 #include "riscv_cpu.h"
 
-#define _info(...) {} ////
-// #define _info printf ////
+// #define _info(...) {} ////
+#define _info printf ////
 
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
@@ -43,7 +43,7 @@
 #error CONFIG_RISCV_MAX_XLEN must be defined
 #endif
 
-// #define DUMP_INVALID_MEM_ACCESS
+#define DUMP_INVALID_MEM_ACCESS
 #define DUMP_MMU_EXCEPTIONS //// On-Demand Paging (riscv_fillpage) will trigger Store/AMO Page Fault (MCAUSE 15)
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR
@@ -401,7 +401,7 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
 
             // Console Output: Line Status Register
             case UART0_BASE_ADDR + UART_LSR_OFFSET:
-                _info("read UART_LSR_OFFSET\n");
+                // _info("read UART_LSR_OFFSET\n");
                 ret = UART_LSR_THRE;  // Always return Transmit Holding Register is Empty
                 break;
 
@@ -525,7 +525,7 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
             // Console Output: Transmit Holding Register
             case UART0_BASE_ADDR + UART_THR_OFFSET: {
                 // Print the character
-                _info("write UART_THR_OFFSET: 0x%x\n", val);
+                // _info("write UART_THR_OFFSET: 0x%x\n", val);
                 char buf[1];
                 buf[0] = val;
                 print_console(NULL, buf, 1);
@@ -1136,7 +1136,7 @@ static void set_priv(RISCVCPUState *s, int priv)
 static void raise_exception2(RISCVCPUState *s, uint32_t cause,
                              target_ulong tval)
 {
-    _info("raise_exception2: cause=%d, tval=%p, pc=%p\n", cause, (void *)tval, s->pc);////
+    // _info("raise_exception2: cause=%d, tval=%p, pc=%p\n", cause, (void *)tval, s->pc);////
     BOOL deleg;
     target_ulong causel;
 
@@ -1189,10 +1189,10 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         if (s->pc == ecall_addr) {
             // For OpenSBI Set Timer: Clear the pending timer interrupt bit
             // https://github.com/riscv-non-isa/riscv-sbi-doc/blob/v1.0.0/riscv-sbi.adoc#61-function-set-timer-fid-0
-            _info("Set Timer\n");
-            _info("  reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
-            _info("  reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
-            _info("  reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
+            // _info("Set Timer\n");
+            // _info("  reg %s=%p\n", reg_name[16], s->reg[16]); //// A6 is X16 (fid)
+            // _info("  reg %s=%p\n", reg_name[17], s->reg[17]); //// A7 is X17 (extid)
+            // _info("  reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10 (parm0)
             riscv_cpu_reset_mip(s, MIP_STIP);
 
             // If parm0 is not -1, set the System Timer (timecmp)
@@ -1204,11 +1204,11 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
         } else if (s->pc == rdtime_addr) {
             // For RDTIME: Return the time
             // https://five-embeddev.com/riscv-isa-manual/latest/counters.html#zicntr-standard-extension-for-base-counters-and-timers
-            _info("Get Time\n");
+            // _info("Get Time\n");
             // static uint64_t t = 0;
             // s->reg[10] = t++;  // Not too much or usleep will hang
             s->reg[10] = real_time;
-            _info("  Return reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
+            // _info("  Return reg %s=%p\n", reg_name[10], s->reg[10]); //// A0 is X10
         }
 
         s->pc += 4;  // Jump to the next instruction (ret)
@@ -1258,7 +1258,7 @@ static void raise_exception2(RISCVCPUState *s, uint32_t cause,
 
 static void raise_exception(RISCVCPUState *s, uint32_t cause)
 {
-    _info("raise_exception: cause=%d\n", cause);////
+    // _info("raise_exception: cause=%d\n", cause);////
     raise_exception2(s, cause, 0);
 }
 
