@@ -477,7 +477,7 @@ plic_read: pending irq=0x2c
 plic_write: offset=0x201004, val=0x2c
 ```
 
-TODO: Why does Pending IRQ look forever?
+TODO: Why does Pending IRQ loop forever?
 
 # TinyEMU
 
