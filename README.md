@@ -224,7 +224,7 @@ Which means `irq->set_irq` is null!
 
 [irq->set_irq is null!](https://github.com/lupyuen2/sg2000-emulator/commit/4a8652a70ff16b85ab16108686916a75505e4ef6)
 
-```text
+```bash
 NuttShell (NSH) NuttX-12.5.1
 nsh> Assertion failed: (irq->set_irq != NULL), function set_irq, file iomem.h, line 145.
 Process 15262 stopped
@@ -251,7 +251,142 @@ Target 0: (temu) stopped.
     frame #8: 0x0000000197a4e0e0 dyld`start + 2360
 ```
 
-TODO: Why?
+We inspect the variables...
+
+```bash
+frame #4: 0x000000010000249c temu`set_irq(irq=0x000000014271a478, level=1) at iomem.h:145:5
+   142 
+   143  static inline void set_irq(IRQSignal *irq, int level)
+   144  {
+-> 145      assert(irq->set_irq != NULL); //// TODO
+   146      irq->set_irq(irq->opaque, irq->irq_num, level);
+   147  }
+   148 
+(lldb) frame variable
+(IRQSignal *) irq = 0x000000014271a478
+(int) level = 1
+(lldb) p *irq
+(IRQSignal) {
+  set_irq = 0x0000000000000000
+  opaque = 0x0000000000000000
+  irq_num = 0
+}
+```
+
+`irq` is all empty! Where does `irq` come from? We step up the Call Stack...
+
+```bash
+(lldb) up
+frame #5: 0x0000000100002418 temu`virtio_console_write_data(s=0x0000000142719980, buf="a\xc0\xedE", buf_len=1) at virtio.c:1346:5
+   1343     _info("[%c]\n", buf[0]); ////
+   1344     set_input(buf[0]);
+   1345     s->int_status |= 1;
+-> 1346     set_irq(s->irq, 1);
+   1347
+   1348 #ifdef NOTUSED
+   1349     int queue_idx = 0;
+(lldb) frame variable
+(VIRTIODevice *) s = 0x0000000142719980
+(const uint8_t *) buf = 0x000000016fdfeae8 "a\xc0\xedE"
+(int) buf_len = 1
+
+(lldb) p *s
+(VIRTIODevice) {
+  mem_map = 0x000000014380fc00
+  mem_range = 0x000000014380fe60
+  pci_dev = NULL
+  irq = 0x000000014271a478
+  get_ram_ptr = 0x00000001000065dc (temu`virtio_mmio_get_ram_ptr at virtio.c:193)
+  debug = 0
+  int_status = 1
+  status = 0
+  device_features_sel = 0
+  queue_sel = 0
+  queue = {
+    [0] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = YES
+    }
+    [1] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+    [2] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+    [3] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+    [4] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+    [5] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+    [6] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+    [7] = {
+      ready = 0
+      num = 16
+      last_avail_idx = 0
+      desc_addr = 0
+      avail_addr = 0
+      used_addr = 0
+      manual_recv = NO
+    }
+  }
+  device_id = 3
+  vendor_id = 65535
+  device_features = 1
+  device_recv = 0x00000001000025cc (temu`virtio_console_recv_request at virtio.c:1278)
+  config_write = 0x0000000000000000
+  config_space_size = 4
+  config_space = "P\0\U00000019"
+}
+```
+
+TODO: Why is `s->irq` empty?
 
 # TinyEMU
 
