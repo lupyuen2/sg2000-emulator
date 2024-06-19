@@ -453,7 +453,31 @@ plic_pending_irq=0x800, plic_served_irq=0x800, mask=0x800
 irq_unexpected_isr: ERROR irq: 37
 ```
 
-TODO: Increase the Pending IRQ Size and Served IRQ Size from 32-bit to 64-bit
+So we fix the IRQ Size: [Increase the Pending IRQ Size and Served IRQ Size from 32-bit to 64-bit](https://github.com/lupyuen2/sg2000-emulator/commit/78ac3ad75f1ec0b54f5bee10488731c7a21fb9ea)
+
+Now we see the correct Pending IRQ!
+
+```bash
+NuttShell (NSH) NuttX-12.5.1
+nsh> plic_set_irq: irq_num=44, state=1
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+plic_write: offset=0x201004, val=0x2c
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+plic_write: offset=0x201004, val=0x2c
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+plic_write: offset=0x201004, val=0x2c
+```
+
+TODO: Why does Pending IRQ look forever?
 
 # TinyEMU
 
