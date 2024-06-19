@@ -43,6 +43,9 @@
 #define _info(...) {} ////
 // #define _info printf ////
 
+//// TODO: Maximum number of IRQs
+#define MAX_IRQ 256
+
 #ifdef NOTUSED
 uint8_t elf_data2[] = { ////
  0x7F, 0x45, 0x4C, 0x46, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -131,7 +134,7 @@ typedef struct RISCVMachine {
     uint64_t timecmp;
     /* PLIC */
     uint32_t plic_pending_irq, plic_served_irq;
-    IRQSignal plic_irq[32]; /* IRQ 0 is not used */
+    IRQSignal plic_irq[MAX_IRQ]; /* IRQ 0 is not used */
     /* HTIF */
     uint64_t htif_tohost, htif_fromhost;
 
@@ -1134,7 +1137,7 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
                         clint_read, clint_write, DEVIO_SIZE32);
     cpu_register_device(s->mem_map, PLIC_BASE_ADDR, PLIC_SIZE, s,
                         plic_read, plic_write, DEVIO_SIZE32);
-    for(i = 1; i < 32; i++) {
+    for(i = 1; i < MAX_IRQ; i++) {
         irq_init(&s->plic_irq[i], plic_set_irq, s, i);
     }
 
