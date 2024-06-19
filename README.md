@@ -386,6 +386,8 @@ frame #5: 0x0000000100002418 temu`virtio_console_write_data(s=0x0000000142719980
 }
 ```
 
+This says that `s` is a `virtio_console`.
+
 Why is `s->irq` empty? We step up the Call Stack...
 
 ```bash
