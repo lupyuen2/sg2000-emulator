@@ -414,7 +414,30 @@ frame #6: 0x000000010000fc30 temu`virt_machine_run(m=0x0000000142719ff0) at temu
 
 `s->irq` comes from `m->console_dev`.
 
-TODO: Why is `console_dev` not properly inited?
+_Why is `console_dev` not properly inited?_
+
+From earlier: UART0 is at RISC-V IRQ 44. But we discover that TinyEMU supports only 32 IRQs!
+
+```c
+static VirtMachine *riscv_machine_init(const VirtMachineParams *p) {
+  for(i = 1; i < 32; i++) {
+    irq_init(&s->plic_irq[i], plic_set_irq, s, i);
+  }
+```
+
+So we increase the IRQs from 32 to 256: [Increase the IRQs from 32 to 256](https://github.com/lupyuen2/sg2000-emulator/commit/c6ce6bdbbdaf7585ce18f77b2b2f25a2317914be)
+
+Now we see something different when we press a key!
+
+```bash
+NuttShell (NSH) NuttX-12.5.1
+nsh> irq_unexpected_isr: ERROR irq: 37
+_assert: Current Version: NuttX  12.5.1 218ccd843a Jun 18 2024 22:14:46 risc-v
+_assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_Task process: Kernel 0x8020110c
+up_dump_register: EPC: 000000008021432a
+```
+
+TODO
 
 # TinyEMU
 
