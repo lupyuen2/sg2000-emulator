@@ -131,19 +131,21 @@ _assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_
 up_dump_register: EPC: 000000008021432a
 ```
 
-TODO: Fix UART Input and UART Interrupt
+Now we fix the UART Input and UART Interrupt. Based on the NuttX Config...
 
 ```bash
 CONFIG_16550_UART0_IRQ=69
 ```
 
-NuttX IRQ Offset is 25, so Actual RISC-V IRQ is 69 - 25 = 44
+Since NuttX IRQ Offset is 25, so Actual RISC-V IRQ is 69 - 25 = 44 (as confirmed by the SG2000 Reference Manual)...
+
+[Set VIRTIO_IRQ to 44](https://github.com/lupyuen2/sg2000-emulator/commit/643c25cada46289539e31579616e7afbf108c3ae)
 
 ```c
 #define VIRTIO_IRQ       44  // UART0 IRQ
 ```
 
-When we press a key: TinyEMU crashes with a Segmentation Fault...
+But when we press a key: TinyEMU crashes with a Segmentation Fault...
 
 ```bash
 $ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg    
@@ -220,7 +222,7 @@ static inline void set_irq(IRQSignal *irq, int level) {
 }
 ```
 
-Which means `irq->set_irq` is null!
+Which means `irq->set_irq` is null! (Rightfully it should be set to `plic_set_irq`)
 
 [irq->set_irq is null!](https://github.com/lupyuen2/sg2000-emulator/commit/4a8652a70ff16b85ab16108686916a75505e4ef6)
 
