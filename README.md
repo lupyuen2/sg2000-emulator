@@ -447,6 +447,7 @@ nsh> plic_set_irq: irq_num=44, state=1
 plic_update_mip: set_mip, pending=0x800, served=0x0
 plic_read: offset=0x201004
 plic_update_mip: reset_mip, pending=0x800, served=0x800
+plic_read: pending irq=0xc
 irq_unexpected_isr: ERROR irq: 37
 ```
 
