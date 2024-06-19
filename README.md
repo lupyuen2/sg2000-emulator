@@ -437,7 +437,20 @@ _assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_
 up_dump_register: EPC: 000000008021432a
 ```
 
-TODO: What is NuttX IRQ 37? (RISC-V IRQ 12) Shouldn't it be RISC-V IRQ 44 for UART Input?
+_What is NuttX IRQ 37? (RISC-V IRQ 12) Shouldn't it be RISC-V IRQ 44 for UART Input?_
+
+Seems the RISC-V IRQs wrap around at 32? So RISC-V IRQ 44 becomes IRQ 12?
+
+```bash
+NuttShell (NSH) NuttX-12.5.1
+nsh> plic_set_irq: irq_num=44, state=1
+plic_update_mip: set_mip, pending=0x800, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x800, served=0x800
+irq_unexpected_isr: ERROR irq: 37
+```
+
+TODO: Increase IRQ Size from 32-bit to 64-bit
 
 # TinyEMU
 
