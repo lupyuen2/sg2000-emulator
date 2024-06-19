@@ -181,7 +181,42 @@ void virt_machine_run(VirtMachine *m) {
   virtio_console_write_data(m->console_dev, buf, ret);
 ```
 
-TODO: Why did TinyEMU crash?
+Why did TinyEMU crash? This doesn't make sense, `m` is non-null!
+
+Maybe it's already optimised? Let's disable GCC Optimisation...
+
+- [Disable GCC Optimisation](https://github.com/lupyuen2/sg2000-emulator/commit/af768df81fc349562565d638e359aca6127c9267)
+
+Now it makes more sense!
+
+```bash
+$ lldb $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+...
+NuttShell (NSH) NuttX-12.5.1
+Process 1595 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+    frame #0: 0x0000000000000000
+error: memory read failed for 0x0
+Target 0: (temu) stopped.
+(lldb) bt
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+  * frame #0: 0x0000000000000000
+    frame #1: 0x0000000100002604 temu`set_irq(irq=0x000000013a607b08, level=1) at iomem.h:145:5
+    frame #2: 0x00000001000025a4 temu`virtio_console_write_data(s=0x000000013d604080, buf="a", buf_len=1) at virtio.c:1346:5
+    frame #3: 0x000000010000fd2c temu`virt_machine_run(m=0x000000013a607680) at temu.c:598:17
+    frame #4: 0x00000001000105cc temu`main(argc=2, argv=0x000000016fdff080) at temu.c:845:9
+    frame #5: 0x0000000197a4e0e0 dyld`start + 2360
+```
+
+Which crashes here...
+
+```c
+static inline void set_irq(IRQSignal *irq, int level) {
+  irq->set_irq(irq->opaque, irq->irq_num, level);
+}
+```
+
+TODO: Why?
 
 # TinyEMU
 
