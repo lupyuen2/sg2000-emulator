@@ -238,6 +238,17 @@ Process 15262 stopped
    147  }
    148 
 Target 0: (temu) stopped.
+(lldb) bt
+* thread #1, queue = 'com.apple.main-thread', stop reason = hit program assert
+    frame #0: 0x0000000197d9ea60 libsystem_kernel.dylib`__pthread_kill + 8
+    frame #1: 0x0000000197dd6c20 libsystem_pthread.dylib`pthread_kill + 288
+    frame #2: 0x0000000197ce3a30 libsystem_c.dylib`abort + 180
+    frame #3: 0x0000000197ce2d20 libsystem_c.dylib`__assert_rtn + 284
+  * frame #4: 0x000000010000249c temu`set_irq(irq=0x000000014271a478, level=1) at iomem.h:145:5
+    frame #5: 0x0000000100002418 temu`virtio_console_write_data(s=0x0000000142719980, buf="a\xc0\xedE", buf_len=1) at virtio.c:1346:5
+    frame #6: 0x000000010000fc30 temu`virt_machine_run(m=0x0000000142719ff0) at temu.c:598:17
+    frame #7: 0x00000001000104d0 temu`main(argc=2, argv=0x000000016fdff080) at temu.c:845:9
+    frame #8: 0x0000000197a4e0e0 dyld`start + 2360
 ```
 
 TODO: Why?
