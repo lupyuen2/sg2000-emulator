@@ -509,9 +509,45 @@ target_read_slow: invalid physical address 0x0000000004140008
 target_read_slow: invalid physical address 0x0000000004140018
 ```
 
-TODO: What are UART Registers 0x4140008 and 0x4140018? Why are they read when we press a key?
+_What are UART Registers 0x4140008 and 0x4140018? Why are they read when we press a key?_
 
-TODO: What is UART Registers 0x4140004? Why is it read when we print to UART?
+We look up the UART Registers...
+
+```c
+// UART Registers from https://github.com/apache/nuttx/blob/master/include/nuttx/serial/uart_16550.h
+#define UART0_BASE_ADDR 0x04140000
+#define CONFIG_16550_REGINCR 4
+#define UART_IIR_INCR          2  /* Interrupt ID Register */
+#define UART_FCR_INCR          2  /* FIFO Control Register */
+#define UART_MSR_INCR          6  /* Modem Status Register */
+
+// So 0x4140008 is one of these...
+#define UART_IIR_OFFSET        (CONFIG_16550_REGINCR*UART_IIR_INCR)
+#define UART_FCR_OFFSET        (CONFIG_16550_REGINCR*UART_FCR_INCR)
+
+// And 0x4140018 is...
+#define UART_MSR_OFFSET        (CONFIG_16550_REGINCR*UART_MSR_INCR)
+```
+
+TODO
+
+_What is UART Register 0x4140004? Why is it read when we print to UART?_
+
+We look up the UART Register...
+
+```c
+// UART Registers from https://github.com/apache/nuttx/blob/master/include/nuttx/serial/uart_16550.h
+#define UART0_BASE_ADDR 0x04140000
+#define CONFIG_16550_REGINCR 4
+#define UART_DLM_INCR          1  /* (DLAB =1) Divisor Latch MSB */
+#define UART_IER_INCR          1  /* (DLAB =0) Interrupt Enable Register */
+
+// So 0x4140004 is one of these...
+#define UART_DLM_OFFSET        (CONFIG_16550_REGINCR*UART_DLM_INCR)
+#define UART_IER_OFFSET        (CONFIG_16550_REGINCR*UART_IER_INCR)
+```
+
+TODO
 
 # TinyEMU
 
