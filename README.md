@@ -437,7 +437,7 @@ _assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_
 up_dump_register: EPC: 000000008021432a
 ```
 
-TODO
+TODO: What is NuttX IRQ 37? (RISC-V IRQ 12) Shouldn't it be RISC-V IRQ 44 for UART Input?
 
 # TinyEMU
 
