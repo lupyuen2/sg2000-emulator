@@ -251,7 +251,7 @@ Target 0: (temu) stopped.
     frame #8: 0x0000000197a4e0e0 dyld`start + 2360
 ```
 
-We inspect the variables...
+We [inspect the variables](https://lldb.llvm.org/use/map.html) in LLDB...
 
 ```bash
 frame #4: 0x000000010000249c temu`set_irq(irq=0x000000014271a478, level=1) at iomem.h:145:5
