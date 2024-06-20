@@ -19,7 +19,7 @@ We update the System Memory Map for SG2000...
 When we boot TinyEMU with SG2000 NuttX, it crashes...
 
 ```bash
-spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
+$ sg2000-emulator/temu root-riscv64.cfg
 TinyEMU Emulator for Sophgo SG2000 SoC
 virtio_console_init
 Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
@@ -106,7 +106,7 @@ q[pc++] = 0x01529293; // slli  t0,t0,0x15
 And it hangs (instead of crashing). Some progress!
 
 ```bash
-spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
+$ sg2000-emulator/temu root-riscv64.cfg
 TinyEMU Emulator for Sophgo SG2000 SoC
 virtio_console_init
 Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
