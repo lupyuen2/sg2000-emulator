@@ -4,9 +4,9 @@ Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC!
 
 We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000...
 
-TODO
+# `auipc` Overflow
 
-[Update RAM Base Addr, CLINT Addr, PLIC Addr](https://github.com/lupyuen2/sg2000-emulator/commit/d36190c63c1db116a206a26f3bc27dfacf5c8298)
+We update the System Memory Map for SG2000: [Update RAM Base Addr, CLINT Addr, PLIC Addr](https://github.com/lupyuen2/sg2000-emulator/commit/d36190c63c1db116a206a26f3bc27dfacf5c8298)
 
 ```bash
 spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
@@ -57,7 +57,7 @@ file.s:3: Error: value of 0000080200000000 too large for field of 4 bytes at 000
 
 0x80200000 is too big to assemble into the auipc address!
 
-So we load 0x80200000 into Register t0 in another way
+So we load 0x80200000 into Register t0 in another way: `li`
 
 ```bash
 li  t0, 0x80200000
@@ -99,6 +99,8 @@ elf_len=0
 virtio_console_resize_event
 ```
 
+# Fix the UART Output
+
 We fix the UART Output Registers: [Update UART Output Register and UART Status Register](https://github.com/lupyuen2/sg2000-emulator/commit/fd6e5333ef6f89b452901d6e580d8387e9da2573)
 
 Now we see NSH Shell yay!
@@ -131,6 +133,8 @@ _assert: Assertion failed panic: at file: irq/irq_unexpectedisr.c:54 task: Idle_
 up_dump_register: EPC: 000000008021432a
 ```
 
+# Fix the UART Interrupt
+
 Now we fix the UART Input and UART Interrupt. Based on the NuttX Config...
 
 ```bash
@@ -153,6 +157,8 @@ $ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg
 NuttShell (NSH) NuttX-12.5.1
 nsh> [1]    94499 segmentation fault  $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg
 ```
+
+# UART Input causes Segmentation Fault
 
 We debug with `lldb` (because `gdb` is not available for macOS Arm64)...
 
@@ -224,7 +230,11 @@ static inline void set_irq(IRQSignal *irq, int level) {
 
 Which means `irq->set_irq` is null! (Rightfully it should be set to `plic_set_irq`)
 
-[irq->set_irq is null!](https://github.com/lupyuen2/sg2000-emulator/commit/4a8652a70ff16b85ab16108686916a75505e4ef6)
+# IRQ Isn't Initialised
+
+_Why is `irq->set_irq` set to null?_
+
+We verify with an Assertion Check: [irq->set_irq is null!](https://github.com/lupyuen2/sg2000-emulator/commit/4a8652a70ff16b85ab16108686916a75505e4ef6)
 
 ```bash
 NuttShell (NSH) NuttX-12.5.1
@@ -390,6 +400,8 @@ frame #5: 0x0000000100002418 temu`virtio_console_write_data(s=0x0000000142719980
 
 This says that `s` is a `virtio_console`.
 
+# TinyEMU Supports only 32 IRQs
+
 Why is `s->irq` empty? We step up the Call Stack...
 
 ```bash
@@ -425,7 +437,11 @@ static VirtMachine *riscv_machine_init(const VirtMachineParams *p) {
   }
 ```
 
+# Increase TinyEMU IRQs from 32 to 64
+
 So we increase the IRQs from 32 to 256: [Increase the IRQs from 32 to 256](https://github.com/lupyuen2/sg2000-emulator/commit/c6ce6bdbbdaf7585ce18f77b2b2f25a2317914be)
+
+(256 IRQs is too many, as we shall soon see)
 
 Now we see something different when we press a key!
 
@@ -476,6 +492,8 @@ plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
 plic_read: pending irq=0x2c
 plic_write: offset=0x201004, val=0x2c
 ```
+
+# Pending IRQ Loops Forever
 
 _Why does Pending IRQ loop forever? Maybe because we haven't cleared the UART Interrupt?_
 
@@ -529,7 +547,7 @@ We look up the UART Registers...
 #define UART_MSR_OFFSET        (CONFIG_16550_REGINCR*UART_MSR_INCR)
 ```
 
-TODO
+TODO: Check the NuttX U16550 Driver
 
 _What is UART Register 0x4140004? Why is it read when we print to UART?_
 
@@ -547,7 +565,7 @@ We look up the UART Register...
 #define UART_IER_OFFSET        (CONFIG_16550_REGINCR*UART_IER_INCR)
 ```
 
-TODO
+TODO: Check the NuttX U16550 Driver
 
 # TinyEMU
 
