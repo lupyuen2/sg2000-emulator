@@ -54,6 +54,7 @@
 #include "riscv_cpu_priv.h"
 
 void print_console(void *machine0, const char *buf, int len); ////
+char read_input(void); ////
 extern uint64_t ecall_addr;
 extern uint64_t rdtime_addr;
 extern uint64_t dcache_iall_addr;
@@ -393,31 +394,43 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
 
             #define UART0_BASE_ADDR 0x04140000
             #define CONFIG_16550_REGINCR 4
+            #define UART_RBR_INCR 0  /* (DLAB =0) Receiver Buffer Register */
             #define UART_THR_INCR 0  /* (DLAB =0) Transmit Holding Register */
+            #define UART_IIR_INCR 2  /* Interrupt ID Register */
             #define UART_LSR_INCR 5  /* Line Status Register */
+            #define UART_RBR_OFFSET (CONFIG_16550_REGINCR*UART_RBR_INCR)
             #define UART_THR_OFFSET (CONFIG_16550_REGINCR*UART_THR_INCR)
+            #define UART_IIR_OFFSET (CONFIG_16550_REGINCR*UART_IIR_INCR)
             #define UART_LSR_OFFSET (CONFIG_16550_REGINCR*UART_LSR_INCR)
+            #define UART_IIR_INTSTATUS (1 << 0)  /* Bit 0:  Interrupt status (active low) */
+            #define UART_IIR_INTID_SHIFT (1)  /* Bits 1-3: Interrupt identification */
+            #define UART_IIR_INTID_RDA (2 << UART_IIR_INTID_SHIFT) /* Receive Data Available (RDA) */
+            #define UART_LSR_DR (1 << 0)  /* Bit 0:  Data Ready */
             #define UART_LSR_THRE (1 << 5)  /* Bit 5:  Transmitter Holding Register Empty */
 
             // Console Output: Line Status Register
-            case UART0_BASE_ADDR + UART_LSR_OFFSET:
+            case UART0_BASE_ADDR + UART_LSR_OFFSET: {
                 // _info("read UART_LSR_OFFSET\n");
                 ret = UART_LSR_THRE;  // Always return Transmit Holding Register is Empty
+                if (read_input() != 0) {
+                    ret |= UART_LSR_DR;  // Receive Data Available
+                }
                 break;
-
-            // TODO: Console Input: BL808_UART_INT_STS (0x30002020) must return UART_INT_STS_URX_END_INT (1 << 1)
-            case 0x30002020:
-                _info("read BL808_UART_INT_STS\n");
-                ret = (1 << 1); break;
-
-            // TODO: Console Input: BL808_UART_INT_MASK (0x30002024) must NOT return UART_INT_MASK_CR_URX_END_MASK (1 << 1)
-            case 0x30002024:
-                _info("read BL808_UART_INT_MASK\n");
-                ret = 0; break;
-
-            // TODO: Console Input: BL808_UART_FIFO_RDATA_OFFSET (0x3000208c) returns the Input Char
-            case 0x3000208c: {
-                char read_input(void);
+            }
+            // Console Input: Interrupt ID Register
+            case UART0_BASE_ADDR + UART_IIR_OFFSET: {
+                _info("read UART_IIR_OFFSET\n");
+                if (read_input() == 0) {
+                    ret = UART_IIR_INTSTATUS;  // Receive Data NOT Available
+                } else {
+                    ret = UART_IIR_INTID_RDA;  // Receive Data Available
+                }
+                break;
+            }
+            // Console Input: Receiver Buffer Register
+            case UART0_BASE_ADDR + UART_RBR_OFFSET: {
+                // Return the Input Buffer
+                _info("read UART_RBR_OFFSET\n");
                 ret = read_input();
 
                 // Clear the Input Buffer
