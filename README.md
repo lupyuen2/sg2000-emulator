@@ -2,9 +2,7 @@
 
 Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC!
 
-We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000...
-
-# `auipc` Overflow in Boot Code
+We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000.
 
 We update the System Memory Map for SG2000...
 
@@ -16,10 +14,36 @@ We update the System Memory Map for SG2000...
 #define PLIC_BASE_ADDR 0x70000000ul
 ```
 
+Then build and run TinyEMU...
+
+```bash
+## Build TinyEMU for macOS
+## For Linux: See https://github.com/lupyuen/nuttx-ox64/blob/main/.github/workflows/ox64-test.yml#L29-L45
+cd $HOME/sg2000-emulator/
+make clean
+make \
+  CFLAGS="-I$(brew --prefix)/opt/openssl/include -I$(brew --prefix)/opt/sdl2/include" \
+  LDFLAGS="-L$(brew --prefix)/opt/openssl/lib -L$(brew --prefix)/opt/sdl2/lib" \
+  CONFIG_MACOS=y
+
+## Build NuttX for SG2000
+cd $HOME/nuttx
+tools/configure.sh milkv_duos:nsh
+make
+## Omitted: Create the `Image` file for SG2000 NuttX
+
+## Boot TinyEMU with NuttX for SG2000
+cd $HOME/nuttx
+wget https://raw.githubusercontent.com/lupyuen/nuttx-ox64/main/nuttx.cfg
+$HOME/sg2000/sg2000-emulator/temu nuttx.cfg
+```
+
+# `auipc` Overflow in Boot Code
+
 When we boot TinyEMU with SG2000 NuttX, it crashes...
 
 ```bash
-$ sg2000-emulator/temu root-riscv64.cfg
+$ sg2000-emulator/temu nuttx.cfg
 TinyEMU Emulator for Sophgo SG2000 SoC
 virtio_console_init
 Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
@@ -106,7 +130,7 @@ q[pc++] = 0x01529293; // slli  t0,t0,0x15
 And it hangs (instead of crashing). Some progress!
 
 ```bash
-$ sg2000-emulator/temu root-riscv64.cfg
+$ sg2000-emulator/temu nuttx.cfg
 TinyEMU Emulator for Sophgo SG2000 SoC
 virtio_console_init
 Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
@@ -124,7 +148,7 @@ We fix the UART Output Registers: [Update UART Output Register and UART Status R
 Now we see NSH Shell yay!
 
 ```bash
-$ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+$ $HOME/sg2000/sg2000-emulator/temu nuttx.cfg 
 ...
 TinyEMU Emulator for Sophgo SG2000 SoC
 virtio_console_init
@@ -142,7 +166,7 @@ nsh>
 When we press a key, NuttX triggers an expected interrupt...
 
 ```bash
-$ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+$ $HOME/sg2000/sg2000-emulator/temu nuttx.cfg 
 ...
 NuttShell (NSH) NuttX-12.5.1
 nsh> irq_unexpected_isr: ERROR irq: 45
@@ -170,10 +194,10 @@ Since NuttX IRQ Offset is 25, so Actual RISC-V IRQ is 69 - 25 = 44 (as confirmed
 But when we press a key: TinyEMU crashes with a Segmentation Fault...
 
 ```bash
-$ $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg    
+$ $HOME/sg2000/sg2000-emulator/temu nuttx.cfg    
 ...
 NuttShell (NSH) NuttX-12.5.1
-nsh> [1]    94499 segmentation fault  $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg
+nsh> [1]    94499 segmentation fault  $HOME/sg2000/sg2000-emulator/temu nuttx.cfg
 ```
 
 # UART Input causes Segmentation Fault
@@ -181,10 +205,10 @@ nsh> [1]    94499 segmentation fault  $HOME/sg2000/sg2000-emulator/temu root-ris
 We debug with `lldb` (because `gdb` is not available for macOS Arm64)...
 
 ```bash
-$ lldb $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+$ lldb $HOME/sg2000/sg2000-emulator/temu nuttx.cfg 
 (lldb) target create "/Users/luppy/sg2000/sg2000-emulator/temu"
 Current executable set to '/Users/luppy/sg2000/sg2000-emulator/temu' (arm64).
-(lldb) settings set -- target.run-args  "root-riscv64.cfg"
+(lldb) settings set -- target.run-args  "nuttx.cfg"
 (lldb) r
 Process 90245 launched: '/Users/luppy/sg2000/sg2000-emulator/temu' (arm64)
 ...
@@ -220,7 +244,7 @@ Maybe it's already optimised? Let's disable GCC Optimisation...
 Now it makes more sense!
 
 ```bash
-$ lldb $HOME/sg2000/sg2000-emulator/temu root-riscv64.cfg 
+$ lldb $HOME/sg2000/sg2000-emulator/temu nuttx.cfg 
 ...
 NuttShell (NSH) NuttX-12.5.1
 Process 1595 stopped
