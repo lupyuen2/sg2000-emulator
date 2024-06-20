@@ -589,7 +589,7 @@ We look up the UART Registers...
 #define UART_MSR_OFFSET        (CONFIG_16550_REGINCR*UART_MSR_INCR)
 ```
 
-TODO: Check the NuttX U16550 Driver for UART_IIR_OFFSET, UART_FCR_OFFSET and UART_MSR_OFFSET
+We check the NuttX 16550 UART Driver for UART_IIR_OFFSET, UART_FCR_OFFSET and UART_MSR_OFFSET. (See the next section)
 
 _What is UART Register 0x4140004? Why is it read when we print to UART?_
 
@@ -607,7 +607,108 @@ We look up the UART Register...
 #define UART_DLM_OFFSET        (CONFIG_16550_REGINCR*UART_IER_INCR)
 ```
 
-TODO: Check the NuttX U16550 Driver for UART_DLM_OFFSET and UART_DLM_OFFSET
+TODO: Check the NuttX 16550 UART Driver for UART_DLM_OFFSET and UART_DLM_OFFSET
+
+# Emulate the UART Interrupt
+
+_How does the NuttX 16550 UART Driver use UART_IIR_OFFSET, UART_FCR_OFFSET and UART_MSR_OFFSET?_
+
+The NuttX 16550 UART Driver reads UART_IIR_OFFSET and UART_MSR_OFFSET to handle UART Interrupts: [uart_16550.c](https://github.com/apache/nuttx/blob/master/drivers/serial/uart_16550.c#L979-L1082)
+
+```c
+static int u16550_interrupt(int irq, FAR void *context, FAR void *arg)
+{
+  FAR struct uart_dev_s *dev = (struct uart_dev_s *)arg;
+  FAR struct u16550_s *priv;
+  uint32_t status;
+  int passes;
+
+  DEBUGASSERT(dev != NULL && dev->priv != NULL);
+  priv = (FAR struct u16550_s *)dev->priv;
+
+  /* Loop until there are no characters to be transferred or,
+   * until we have been looping for a long time.
+   */
+
+  for (passes = 0; passes < 256; passes++)
+    {
+      /* Get the current UART status and check for loop
+       * termination conditions
+       */
+
+      status = u16550_serialin(priv, UART_IIR_OFFSET);
+
+      /* The UART_IIR_INTSTATUS bit should be zero if there are pending
+       * interrupts
+       */
+
+      if ((status & UART_IIR_INTSTATUS) != 0)
+        {
+          /* Break out of the loop when there is no longer a
+           * pending interrupt
+           */
+
+          break;
+        }
+
+      /* Handle the interrupt by its interrupt ID field */
+
+      switch (status & UART_IIR_INTID_MASK)
+        {
+          /* Handle incoming, receive bytes (with or without timeout) */
+
+          case UART_IIR_INTID_RDA:
+          case UART_IIR_INTID_CTI:
+            {
+              uart_recvchars(dev);
+              break;
+            }
+
+          /* Handle outgoing, transmit bytes */
+
+          case UART_IIR_INTID_THRE:
+            {
+              uart_xmitchars(dev);
+              break;
+            }
+
+          /* Just clear modem status interrupts (UART1 only) */
+
+          case UART_IIR_INTID_MSI:
+            {
+              /* Read the modem status register (MSR) to clear */
+
+              status = u16550_serialin(priv, UART_MSR_OFFSET);
+              sinfo("MSR: %02"PRIx32"\n", status);
+              break;
+            }
+
+          /* Just clear any line status interrupts */
+
+          case UART_IIR_INTID_RLS:
+            {
+              /* Read the line status register (LSR) to clear */
+
+              status = u16550_serialin(priv, UART_LSR_OFFSET);
+              sinfo("LSR: %02"PRIx32"\n", status);
+              break;
+            }
+
+          /* There should be no other values */
+
+          default:
+            {
+              serr("ERROR: Unexpected IIR: %02"PRIx32"\n", status);
+              break;
+            }
+        }
+    }
+
+  return OK;
+}
+```
+
+TODO: Emulate UART_IIR_OFFSET and UART_MSR_OFFSET for UART Interrupts
 
 # TinyEMU
 
