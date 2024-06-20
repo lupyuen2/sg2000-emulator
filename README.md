@@ -18,7 +18,7 @@ Then build and run TinyEMU...
 
 ```bash
 ## Build TinyEMU for macOS
-## For Linux: See https://github.com/lupyuen/nuttx-ox64/blob/main/.github/workflows/ox64-test.yml#L29-L45
+## For Linux: See https://github.com/lupyuen/nuttx-sg2000/blob/main/.github/workflows/sg2000-test.yml#L29-L45
 cd $HOME/sg2000-emulator/
 make clean
 make \
@@ -27,6 +27,7 @@ make \
   CONFIG_MACOS=y
 
 ## Build NuttX for SG2000
+## https://lupyuen.github.io/articles/sg2000#appendix-build-nuttx-for-sg2000
 cd $HOME/nuttx
 tools/configure.sh milkv_duos:nsh
 make
@@ -34,7 +35,7 @@ make
 
 ## Boot TinyEMU with NuttX for SG2000
 cd $HOME/nuttx
-wget https://raw.githubusercontent.com/lupyuen/nuttx-ox64/main/nuttx.cfg
+wget https://raw.githubusercontent.com/lupyuen/nuttx-sg2000/main/nuttx.cfg
 $HOME/sg2000/sg2000-emulator/temu nuttx.cfg
 ```
 
