@@ -55,6 +55,7 @@
 
 void print_console(void *machine0, const char *buf, int len); ////
 char read_input(void); ////
+void virtio_ack_irq(void *device0); ////
 extern uint64_t ecall_addr;
 extern uint64_t rdtime_addr;
 extern uint64_t dcache_iall_addr;
@@ -436,6 +437,9 @@ int target_read_slow(RISCVCPUState *s, mem_uint_t *pval,
                 // Clear the Input Buffer
                 void set_input(char ch);
                 set_input(0);
+
+                // Clear the UART Interrupt
+                virtio_ack_irq(NULL);
                 break;
             }
             default:  // Unknown Memory-Mapped I/O
@@ -542,13 +546,6 @@ int target_write_slow(RISCVCPUState *s, target_ulong addr,
                 char buf[1];
                 buf[0] = val;
                 print_console(NULL, buf, 1);
-                break;
-            }
-            // TODO: Console Input: Clear the interrupt after setting BL808_UART_INT_CLEAR (0x30002028)
-            case 0x30002028: {
-                _info("write BL808_UART_INT_CLEAR: 0x%x\n", val);
-                void virtio_ack_irq(void *device0);
-                virtio_ack_irq(NULL);
                 break;
             }
             // TODO: GPIO Output: Send an Emulator Notification to the Console: {"nuttxemu":{"gpio29":1}}
