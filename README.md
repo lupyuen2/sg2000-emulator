@@ -589,7 +589,7 @@ We look up the UART Registers...
 #define UART_MSR_OFFSET        (CONFIG_16550_REGINCR*UART_MSR_INCR)
 ```
 
-TODO: Check the NuttX U16550 Driver
+TODO: Check the NuttX U16550 Driver for UART_IIR_OFFSET, UART_FCR_OFFSET and UART_MSR_OFFSET
 
 _What is UART Register 0x4140004? Why is it read when we print to UART?_
 
@@ -604,10 +604,10 @@ We look up the UART Register...
 
 // So 0x4140004 is one of these...
 #define UART_DLM_OFFSET        (CONFIG_16550_REGINCR*UART_DLM_INCR)
-#define UART_IER_OFFSET        (CONFIG_16550_REGINCR*UART_IER_INCR)
+#define UART_DLM_OFFSET        (CONFIG_16550_REGINCR*UART_IER_INCR)
 ```
 
-TODO: Check the NuttX U16550 Driver
+TODO: Check the NuttX U16550 Driver for UART_DLM_OFFSET and UART_DLM_OFFSET
 
 # TinyEMU
 
