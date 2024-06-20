@@ -1,6 +1,6 @@
 # Emulate Sophgo SG2000 SoC / Milk-V Duo S SBC with TinyEMU RISC-V Emulator
 
-Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC!
+Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC! It runs every day for our [Daily Automated Testing](https://github.com/lupyuen/nuttx-sg2000#nuttx-automated-daily-build-for-sg2000) of Apache NuttX RTOS for SG2000.
 
 We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000.
 
@@ -38,6 +38,8 @@ cd $HOME/nuttx
 wget https://raw.githubusercontent.com/lupyuen/nuttx-sg2000/main/nuttx.cfg
 $HOME/sg2000/sg2000-emulator/temu nuttx.cfg
 ```
+
+This is how we fix the rest of the emulator...
 
 # `auipc` Overflow in Boot Code
 
