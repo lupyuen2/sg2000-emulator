@@ -33,8 +33,8 @@
 #include "iomem.h"
 #include "riscv_cpu.h"
 
-// #define _info(...) {} ////
-#define _info printf ////
+#define _info(...) {} ////
+// #define _info printf ////
 
 #ifndef MAX_XLEN
 #error MAX_XLEN must be defined
@@ -43,7 +43,7 @@
 #error CONFIG_RISCV_MAX_XLEN must be defined
 #endif
 
-#define DUMP_INVALID_MEM_ACCESS
+// #define DUMP_INVALID_MEM_ACCESS
 #define DUMP_MMU_EXCEPTIONS //// On-Demand Paging (riscv_fillpage) will trigger Store/AMO Page Fault (MCAUSE 15)
 #define DUMP_INTERRUPTS
 #define DUMP_INVALID_CSR

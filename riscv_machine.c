@@ -40,8 +40,8 @@
 #include "elf.h"
 #include "compress.h"
 
-// #define _info(...) {} ////
-#define _info printf ////
+#define _info(...) {} ////
+// #define _info printf ////
 
 //// Maximum number of IRQs
 #define MAX_IRQ 64
