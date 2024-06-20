@@ -708,11 +708,49 @@ static int u16550_interrupt(int irq, FAR void *context, FAR void *arg)
 }
 ```
 
-Thus we need to emulate the UART Interrupt...
+Thus we need to emulate the UART Interrupt. To Receive Data...
 
-- To receive data: UART_IIR_OFFSET should return UART_IIR_INTID_RDA
+- UART Register UART_IIR: Should return UART_IIR_INTID_RDA (data available)
 
-TODO: Emulate UART_IIR_OFFSET and UART_MSR_OFFSET for UART Interrupts
+  Then it should return UART_IIR_INTSTATUS (no more data)
+
+- UART Register UART_LSR: Should return UART_LSR_DR (data available)
+
+  Then it should return 0 (no more data)
+
+- UART Register UART_RBR: Should return the input data
+
+We emulate the UART Interrupt like this: [Emulate UART Interrupt: UART_LSR, UART_IIR, UART_RBR](https://github.com/lupyuen2/sg2000-emulator/commit/ce3562e4d7efe53b52a1b945850f08d93630d4d2)
+
+Now we see...
+
+```bash
+plic_set_irq: irq_num=44, state=1
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+
+read UART_IIR_OFFSET
+read UART_RBR_OFFSET
+read UART_IIR_OFFSET
+
+plic_write: offset=0x201004, val=0x2c
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+
+read UART_IIR_OFFSET
+plic_write: offset=0x201004, val=0x2c
+plic_update_mip: set_mip, pending=0x80000000000, served=0x0
+plic_read: offset=0x201004
+plic_update_mip: reset_mip, pending=0x80000000000, served=0x80000000000
+plic_read: pending irq=0x2c
+read UART_IIR_OFFSET
+```
+
+TODO: Why pending IRQ looping forever?
 
 # TinyEMU
 
