@@ -708,6 +708,10 @@ static int u16550_interrupt(int irq, FAR void *context, FAR void *arg)
 }
 ```
 
+Thus we need to emulate the UART Interrupt...
+
+- To receive data: UART_IIR_OFFSET should return UART_IIR_INTID_RDA
+
 TODO: Emulate UART_IIR_OFFSET and UART_MSR_OFFSET for UART Interrupts
 
 # TinyEMU
