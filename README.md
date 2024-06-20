@@ -777,6 +777,8 @@ NuttX 12.5.1 50fadb93f2 Jun 18 2024 09:20:31 risc-v milkv_duos
 nsh> 
 ```
 
+[OSTest works OK too!](https://gist.github.com/lupyuen/ac80b426f67ad38f6a59ae563b0ecb9f)
+
 # TinyEMU
 
 [![Build](https://github.com/lupyuen/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
