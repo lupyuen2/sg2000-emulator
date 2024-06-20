@@ -750,7 +750,32 @@ plic_read: pending irq=0x2c
 read UART_IIR_OFFSET
 ```
 
-TODO: Why pending IRQ looping forever?
+# Clear the UART Interrupt
+
+_Why is pending IRQ looping forever?_
+
+That's because we forgot to clear the UART Interrupt duh!
+
+- [Clear the UART Interrupt](https://github.com/lupyuen2/sg2000-emulator/commit/2d10b7699378525a3cf4282d2eaf9da051726638)
+
+Finally it works OK yay! [(We disabled logging)](https://github.com/lupyuen2/sg2000-emulator/commit/ba2e9e09df18e7feed38e67a1ca678348f0c2d2a)
+
+```bash
+$ sg2000-emulator/temu nuttx.cfg
+TinyEMU Emulator for Sophgo SG2000 SoC
+virtio_console_init
+Patched DCACHE.IALL (Invalidate all Page Table Entries in the D-Cache) at 0x80200a28
+Patched SYNC.S (Ensure that all Cache Operations are completed) at 0x80200a2c
+Found ECALL (Start System Timer) at 0x8020b2c6
+Patched RDTIME (Read System Time) at 0x8020b2cc
+elf_len=0
+virtio_console_resize_event
+ABC
+NuttShell (NSH) NuttX-12.5.1
+nsh> uname -a
+NuttX 12.5.1 50fadb93f2 Jun 18 2024 09:20:31 risc-v milkv_duos
+nsh> 
+```
 
 # TinyEMU
 
