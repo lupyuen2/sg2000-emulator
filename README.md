@@ -780,6 +780,14 @@ nsh>
 
 [OSTest works OK too!](https://gist.github.com/lupyuen/ac80b426f67ad38f6a59ae563b0ecb9f)
 
+_SG2000 Emulator seems slower than Ox64 BL808 Emulator?_
+
+Yeah probably because SG2000 runs on [MTIMER_FREQ of 25000000](https://github.com/lupyuen2/wip-nuttx/commit/bb4906c976e44a05237f91944844cd1c68ef5d5b).
+
+When we execute `sleep 10`, it completes in 25 seconds. We might need to adjust the TinyEMU System Timer.
+
+(CPU-bound operations like `getprime` won't have this timing delay)
+
 # TinyEMU
 
 [![Build](https://github.com/lupyuen/TinyEMU/workflows/Build/badge.svg)][GitHub Actions]
