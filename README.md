@@ -4,9 +4,19 @@ Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC!
 
 We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000...
 
-# `auipc` Overflow
+# `auipc` Overflow in Boot Code
 
-We update the System Memory Map for SG2000: [Update RAM Base Addr, CLINT Addr, PLIC Addr](https://github.com/lupyuen2/sg2000-emulator/commit/d36190c63c1db116a206a26f3bc27dfacf5c8298)
+We update the System Memory Map for SG2000...
+
+[Update RAM Base Addr, CLINT Addr, PLIC Addr](https://github.com/lupyuen2/sg2000-emulator/commit/d36190c63c1db116a206a26f3bc27dfacf5c8298)
+
+```c
+#define RAM_BASE_ADDR  0x80200000ul
+#define CLINT_BASE_ADDR 0x74000000ul  // TODO: Unused
+#define PLIC_BASE_ADDR 0x70000000ul
+```
+
+When we boot TinyEMU with SG2000 NuttX, it crashes...
 
 ```bash
 spawn /Users/Luppy/sg2000/sg2000-emulator/temu root-riscv64.cfg
@@ -32,14 +42,20 @@ priv=S mstatus=0000000a00040080 cycles=19
 tinyemu: Illegal instruction, quitting: pc=0x0, instruction=0x0
 ```
 
-0xffffffff80200000 looks sus, it seems related to RAM Base Address 0x80200000. We check the TinyEMU Boot Code...
+0xffffffff80200000 looks sus, it seems related to RAM Base Address 0x80200000. We check the TinyEMU Boot Code: [riscv_machine.c](https://github.com/lupyuen2/sg2000-emulator/blob/main/riscv_machine.c#L967-L970)
 
 ```c
-q = (uint32_t *)(ram_ptr + 0x1000);
-q[0] = 0x297 + RAM_BASE_ADDR - 0x1000; /* auipc t0, jump_addr */
+static void copy_bios(...) {
+...
+  // TinyEMU Boot Code
+  q = (uint32_t *)(ram_ptr + 0x1000);
+
+  // Load RAM Base Address into Register T0:
+  // auipc t0, RAM_BASE_ADDR
+  q[0] = 0x297 + RAM_BASE_ADDR - 0x1000;
 ```
 
-Maybe auipc has a problem? We run the RISC-V Online Assembler: https://riscvasm.lucasteske.dev/#
+Maybe auipc has a problem? We run the [RISC-V Online Assembler](https://riscvasm.lucasteske.dev/#)
 
 We try to assemble the TinyEMU Boot Code (for loading the RAM Base Address 0x80200000)...
 
@@ -56,6 +72,8 @@ file.s:3: Error: value of 0000080200000000 too large for field of 4 bytes at 000
 ```
 
 0x80200000 is too big to assemble into the auipc address!
+
+# Change `auipc` to `li` in Boot Code
 
 So we load 0x80200000 into Register t0 in another way: `li`
 
