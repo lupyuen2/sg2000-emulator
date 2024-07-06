@@ -1,5 +1,9 @@
 # Emulate Sophgo SG2000 SoC / Milk-V Duo S SBC with TinyEMU RISC-V Emulator
 
+Read the article...
+
+- ["RISC-V Emulator for Sophgo SG2000 SoC (Pine64 Oz64 / Milk-V Duo S)"](https://lupyuen.github.io/articles/sg2000b)
+
 Let's create a Software Emulator for Sophgo SG2000 SoC and Milk-V Duo S SBC! It runs every day for our [Daily Automated Testing](https://github.com/lupyuen/nuttx-sg2000#nuttx-automated-daily-build-for-sg2000) of Apache NuttX RTOS for SG2000.
 
 We begin with the [TinyEMU RISC-V Emulator](https://lupyuen.github.io/articles/tinyemu3) for Ox64 BL808 SBC. And we tweak it for SG2000.
